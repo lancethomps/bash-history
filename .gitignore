@@ -1,0 +1,33 @@
+############################
+# IDEs
+############################
+
+## Eclipse
+.classpath
+.project
+.settings/
+/bin/
+
+## NetBeans
+/nbproject/
+
+## Visual Studio Code
+.vscode/.ropeproject/
+
+## IntelliJ Idea
+.idea/*
+!.idea/runConfigurations/
+!.idea/scopes/
+!.idea/watcherTasks.xml
+*.iml
+*.ipr
+*.iws
+checkstyle-cachefile
+out/
+
+############################
+# OSes
+############################
+
+# macOS
+.DS_Store

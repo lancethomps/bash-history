@@ -3,10 +3,10 @@ BASH_HIST_LOGS="${BASH_HIST_LOGS:-$HOME/.logs/bash_history}"
 BASH_HIST_AWK_CMD='{printf "%s\t%s\t%s\n", substr($3,2), substr($1,1,19), $2}'
 BASH_HIST_MAX_WIDTH="${BASH_HIST_MAX_WIDTH:-225}"
 
-if test "$BASH_HIST_NO_WRITE" = true; then
+if test "$BASH_HIST_NO_WRITE" = 'true'; then
   true
-elif [ -w "$HOME" ]; then
-  if [ -z "$ORIG_PROMPT_COMMAND" ]; then
+elif test -w "$HOME"; then
+  if test -z "$ORIG_PROMPT_COMMAND"; then
     export ORIG_PROMPT_COMMAND="${PROMPT_COMMAND:- }"
   else
     export PROMPT_COMMAND="$ORIG_PROMPT_COMMAND"
@@ -20,13 +20,12 @@ elif [ -w "$HOME" ]; then
   log_cmd_pre='_prev_cmd="$(fc -ln -0 2>/dev/null)"'
   log_cmd_post='unset _prev_cmd'
   log_cmd='if [[ ${_prev_cmd} != "	  "* ]]; then echo "$(python -c "from datetime import datetime;import sys;sys.stdout.write(datetime.now().strftime(\"%Y-%m-%d %H:%M:%S.%f\")[:-3]);")'" $log_tz_offset"$'\t'"$_PWD_PREFIX"'$(pwd)${_prev_cmd}" >> '"$BASH_HIST_LOGS"'/bash-history_$(date "+%Y-%m-%d")_'$(hostname)'.log; fi'
-  if [ "$(id -u)" -ne 0 ]; then
-    [ ! -d "$BASH_HIST_LOGS" ] && mkdir -p "$BASH_HIST_LOGS"
+  if test "$(id -u)" -ne 0; then
+    ! test -d "$BASH_HIST_LOGS" && mkdir -p "$BASH_HIST_LOGS"
     export PROMPT_COMMAND="${log_cmd_pre}; ${log_cmd}; ${log_cmd_post}; ${PROMPT_COMMAND}"
   elif current_user=$(/bin/ls -l /dev/console | /usr/bin/awk '{ print $3 }'); then
-    [ ! -d "$BASH_HIST_LOGS" ] && sudo -u "$current_user" mkdir -p "$BASH_HIST_LOGS"
+    ! test -d "$BASH_HIST_LOGS" && sudo -u "$current_user" mkdir -p "$BASH_HIST_LOGS"
     export PROMPT_COMMAND="${log_cmd_pre}; ${log_cmd}; ${log_cmd_post}; ${PROMPT_COMMAND}"
-    # export PROMPT_COMMAND="sudo -u ${current_user} -s ${log_cmd_pre}; sudo -u ${current_user} -s ${log_cmd}; sudo -u ${current_user} -s ${log_cmd_post}; ${PROMPT_COMMAND}"
   else
     echo "Running as root and current logged in user could not be determined, not writing history logs..."
   fi
@@ -46,12 +45,14 @@ function __pull_matches () {
   hist_grep "$@" | tail -n +2 | command grep -Ev '\s('"$ignore_commands"')(\s|$)' | sed '1!G;h;$!d' | head -"${BASH_HIST_SELECT_COUNT:-50}" | awk -F $'\t' "$BASH_HIST_AWK_CMD" | csvlook --tabs --no-header-row | tail -n +3
 }
 function __ask_user_to_select_cmd () {
-  local found_lines found_cmd exec_cmd exit_val
-  readarray -n "${BASH_HIST_SELECT_COUNT:-50}" -t found_lines < <(__pull_matches "$@")
-  if (( "${#found_lines[@]}" < 1 )); then
-    return 1
-  fi
-  found_cmd="$(select_prompt -m "Please select the command to execute from the list below." --max-width "$BASH_HIST_MAX_WIDTH" "${found_lines[@]}")"
+  local found_lines found_cmd exit_val
+  # readarray -n "${BASH_HIST_SELECT_COUNT:-50}" -t found_lines < <(__pull_matches "$@")
+  # if (( "${#found_lines[@]}" < 1 )); then
+  #   return 1
+  # fi
+  # found_cmd="$(select_prompt -m "Please select the command from the list below." --max-width "$BASH_HIST_MAX_WIDTH" "${found_lines[@]}")"
+  # exit_val="$?"
+  found_cmd="$(__pull_matches "$@" | fzf --no-sort --layout=reverse --header='Please select the command from the list below.')"
   exit_val="$?"
   if test "$exit_val" -ne 0; then
     return "$exit_val"
@@ -66,21 +67,21 @@ function __ask_user_to_select_cmd () {
 function hist () {
   local use_pager=true
   local bh_pager="${BASH_HIST_PAGER:-$PAGER}"
-  if [ "$1" == '--no-pager' ]; then
+  if test "$1" = '--no-pager'; then
     use_pager=false
     shift
-  elif [ "$1" == '--pager' ]; then
+  elif test "$1" = '--pager'; then
     use_pager=true
     shift
-  elif [ -z "${bh_pager}" ]; then
+  elif test -z "${bh_pager}"; then
     use_pager=false
-  elif [ ! -t 1 ]; then
+  elif ! test -t 1; then
     use_pager=false
   fi
 
   local size="${1}"
-  if [ -z "$size" ]; then
-    if [ "$use_pager" == true ]; then
+  if test -z "$size"; then
+    if test "$use_pager" = 'true'; then
       size='500'
     else
       size='50'
@@ -97,9 +98,9 @@ function hist () {
     file_pos="$(( file_pos + 1 ))"
     curr_size="$(( curr_size + add_size ))"
     remaining_size="$(( size - curr_size ))"
-    [ -z "$out" ] && out="$add_out" || out="${out}"$'\n'"${add_out}"
+    test -z "$out" && out="$add_out" || out="${out}"$'\n'"${add_out}"
   done
-  if [ "$use_pager" == true ]; then
+  if test "$use_pager" = 'true'; then
     { echo 'Command'$'\t''Time'$'\t''PWD'; echo "$out" | awk -F $'\t' "$BASH_HIST_AWK_CMD"; } | eval "${bh_pager}"
   else
     { echo 'Time'$'\t''PWD'$'\t''Command'; echo "$out"; }
@@ -108,15 +109,15 @@ function hist () {
 function hist_grep () {
   local use_pager=true
   local bh_pager="${BASH_HIST_PAGER:-$PAGER}"
-  if [ "$1" == '--no-pager' ]; then
+  if test "$1" = '--no-pager'; then
     use_pager=false
     shift
-  elif [ "$1" == '--pager' ]; then
+  elif test "$1" = '--pager'; then
     use_pager=true
     shift
-  elif [ -z "${bh_pager}" ]; then
+  elif test -z "${bh_pager}"; then
     use_pager=false
-  elif [ ! -t 1 ]; then
+  elif ! test -t 1; then
     use_pager=false
   fi
   local grep_args=("$@")
@@ -127,7 +128,7 @@ function hist_grep () {
     grep_args+=("-i")
   fi
 
-  if [ "$use_pager" == true ]; then
+  if test "$use_pager" = 'true'; then
     { echo 'Command'$'\t''Time'$'\t''PWD'; command grep --color=auto --no-filename -E "${grep_args[@]}" $(ls "$BASH_HIST_LOGS/bash-history"*.log | sort -r | tr $'\n' ' ') | sort -r | awk -F $'\t' "$BASH_HIST_AWK_CMD"; } | eval "${bh_pager}"
   else
     { echo 'Time'$'\t''PWD'$'\t''Command'; command grep --color=auto --no-filename -E "${grep_args[@]}" $(ls "$BASH_HIST_LOGS/bash-history"*.log | sort -r | tr $'\n' ' ') | sort; }

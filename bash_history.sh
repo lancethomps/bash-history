@@ -167,9 +167,3 @@ function hist_grep_pwd () {
 function hist_grep_unique () {
   hist_grep "$@" | cut -f3 | awk '!x[$0]++'
 }
-
-alias hg='hist_grep'
-alias hgc='hist_grep_copy'
-alias hge='hist_grep_exec'
-alias hgp='hist_grep_pwd'
-alias hgu='hist_grep_unique'

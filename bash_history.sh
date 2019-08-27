@@ -61,7 +61,7 @@ function __ask_user_to_select_cmd () {
     echo "Nothing selected, exiting..."
     return 1
   fi
-  __extract_cmd "$found_cmd"
+  echo "$found_cmd"
 }
 
 function hist () {
@@ -135,12 +135,14 @@ function hist_grep () {
   fi
 }
 function hist_grep_copy () {
-  local exec_cmd exit_val
-  exec_cmd="$(__ask_user_to_select_cmd 'hgc|hist_grep_copy' "$@")"
+  local exec_cmd_full exec_cmd exit_val
+  exec_cmd_full="$(__ask_user_to_select_cmd 'hgc|hist_grep_copy' "$@")"
   exit_val="$?"
   if test "$exit_val" -ne 0; then
     return "$exit_val"
   fi
+  echo "${exec_cmd_full}"
+  exec_cmd="$(__extract_cmd "${exec_cmd_full}")"
   echo -n "$exec_cmd" | pbcopy
   exit_val=$?
   if [ $exit_val -eq 0 ]; then
@@ -149,12 +151,14 @@ function hist_grep_copy () {
   return $exit_val
 }
 function hist_grep_exec () {
-  local exec_cmd exit_val
-  exec_cmd="$(__ask_user_to_select_cmd 'hge|hist_grep_exec' "$@")"
+  local exec_cmd_full exec_cmd exit_val
+  exec_cmd_full="$(__ask_user_to_select_cmd 'hge|hist_grep_exec' "$@")"
   exit_val="$?"
   if test "$exit_val" -ne 0; then
     return "$exit_val"
   fi
+  echo "${exec_cmd_full}"
+  exec_cmd="$(__extract_cmd "${exec_cmd_full}")"
   history -s $exec_cmd
   echo "Running: $exec_cmd"$'\n''---------------------------------'
   eval $exec_cmd

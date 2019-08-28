@@ -3,10 +3,10 @@ BASH_HIST_LOGS="${BASH_HIST_LOGS:-$HOME/.logs/bash_history}"
 BASH_HIST_AWK_CMD='{printf "%s\t%s\t%s\n", substr($3,2), substr($1,1,19), $2}'
 BASH_HIST_MAX_WIDTH="${BASH_HIST_MAX_WIDTH:-225}"
 
-if test "$BASH_HIST_NO_WRITE" = 'true'; then
+if test "${BASH_HIST_NO_WRITE:-}" = 'true'; then
   true
 elif test -w "$HOME"; then
-  if test -z "$ORIG_PROMPT_COMMAND"; then
+  if test -z "${ORIG_PROMPT_COMMAND:-}"; then
     export ORIG_PROMPT_COMMAND="${PROMPT_COMMAND:- }"
   else
     export PROMPT_COMMAND="$ORIG_PROMPT_COMMAND"
@@ -34,24 +34,13 @@ else
   echo "It appears your home directory is read only, not writing history logs there..."
 fi
 
-function __extract_cmd () {
-  # NB: the first regex removes colors from the output (https://stackoverflow.com/questions/17998978/removing-colors-from-output)
-  echo "$@" | \
-    python -c "import re;import sys;sys.stdout.write(re.sub(r'\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]', '', sys.stdin.read()))" | \
-    python -c 'import re, sys;sys.stdout.write(re.match(r"^\| (.*?)\s+\| ([^|]+?)\s+\|\s+([^|]+?)\s+\|$", sys.stdin.read()).group(1))'
-}
-function __pull_matches () {
-  local ignore_commands="$1"; shift
+function __pull_matches() {
+  local ignore_commands
+  ignore_commands="$1" && shift
   hist_grep "$@" | tail -n +2 | command grep -Ev '\s('"$ignore_commands"')(\s|$)' | sed '1!G;h;$!d' | head -"${BASH_HIST_SELECT_COUNT:-50}" | awk -F $'\t' "$BASH_HIST_AWK_CMD" | csvlook --tabs --no-header-row | tail -n +3
 }
-function __ask_user_to_select_cmd () {
-  local found_lines found_cmd exit_val
-  # readarray -n "${BASH_HIST_SELECT_COUNT:-50}" -t found_lines < <(__pull_matches "$@")
-  # if (( "${#found_lines[@]}" < 1 )); then
-  #   return 1
-  # fi
-  # found_cmd="$(select_prompt -m "Please select the command from the list below." --max-width "$BASH_HIST_MAX_WIDTH" "${found_lines[@]}")"
-  # exit_val="$?"
+function __ask_user_to_select_cmd() {
+  local found_cmd exit_val
   found_cmd="$(__pull_matches "$@" | fzf --no-sort --layout=reverse --header='Please select the command from the list below.')"
   exit_val="$?"
   if test "$exit_val" -ne 0; then
@@ -64,7 +53,7 @@ function __ask_user_to_select_cmd () {
   echo "$found_cmd"
 }
 
-function hist () {
+function hist() {
   local use_pager=true
   local bh_pager="${BASH_HIST_PAGER:-$PAGER}"
   if test "$1" = '--no-pager'; then
@@ -90,23 +79,29 @@ function hist () {
   local remaining_size="$size"
   local file_pos=1
   local curr_size=0
-  local out add_out
-  local all_logs="$(ls -t "$BASH_HIST_LOGS/bash-history"*.log)"
-  while (( $size > $curr_size)); do
-    add_out="$(cat $(echo "$all_logs" | head -$file_pos | tail -1) | tail -$remaining_size | tail -r)"
+  local out add_out all_logs
+  all_logs="$(ls -t "$BASH_HIST_LOGS/bash-history"*.log)"
+  while (($size > $curr_size)); do
+    add_out="$(cat "$(echo "$all_logs" | head "-$file_pos" | tail -1)" | tail "-$remaining_size" | tail -r)"
     add_size="$(echo "$add_out" | wc -l | tr -d '\011\012\015')"
-    file_pos="$(( file_pos + 1 ))"
-    curr_size="$(( curr_size + add_size ))"
-    remaining_size="$(( size - curr_size ))"
+    file_pos="$((file_pos + 1))"
+    curr_size="$((curr_size + add_size))"
+    remaining_size="$((size - curr_size))"
     test -z "$out" && out="$add_out" || out="${out}"$'\n'"${add_out}"
   done
   if test "$use_pager" = 'true'; then
-    { echo 'Command'$'\t''Time'$'\t''PWD'; echo "$out" | awk -F $'\t' "$BASH_HIST_AWK_CMD"; } | eval "${bh_pager}"
+    {
+      echo 'Command'$'\t''Time'$'\t''PWD'
+      echo "$out" | awk -F $'\t' "$BASH_HIST_AWK_CMD"
+    } | eval "${bh_pager}"
   else
-    { echo 'Time'$'\t''PWD'$'\t''Command'; echo "$out"; }
+    {
+      echo 'Time'$'\t''PWD'$'\t''Command'
+      echo "$out"
+    }
   fi
 }
-function hist_grep () {
+function hist_grep() {
   local use_pager=true
   local bh_pager="${BASH_HIST_PAGER:-$PAGER}"
   if test "$1" = '--no-pager'; then
@@ -124,17 +119,23 @@ function hist_grep () {
   if test "$1" = '--use-case'; then
     shift
     grep_args=("$@")
-  elif ! [[ "${@: -1}" =~ [A-Z] ]]; then
+  elif ! [[ "${*: -1}" =~ [A-Z] ]]; then
     grep_args+=("-i")
   fi
 
   if test "$use_pager" = 'true'; then
-    { echo 'Command'$'\t''Time'$'\t''PWD'; command grep --color=auto --no-filename -E "${grep_args[@]}" $(ls "$BASH_HIST_LOGS/bash-history"*.log | sort -r | tr $'\n' ' ') | sort -r | awk -F $'\t' "$BASH_HIST_AWK_CMD"; } | eval "${bh_pager}"
+    {
+      echo 'Command'$'\t''Time'$'\t''PWD'
+      command grep --color=auto --no-filename -E "${grep_args[@]}" $(ls "$BASH_HIST_LOGS/bash-history"*.log | sort -r | tr $'\n' ' ') | sort -r | awk -F $'\t' "$BASH_HIST_AWK_CMD"
+    } | eval "${bh_pager}"
   else
-    { echo 'Time'$'\t''PWD'$'\t''Command'; command grep --color=auto --no-filename -E "${grep_args[@]}" $(ls "$BASH_HIST_LOGS/bash-history"*.log | sort -r | tr $'\n' ' ') | sort; }
+    {
+      echo 'Time'$'\t''PWD'$'\t''Command'
+      command grep --color=auto --no-filename -E "${grep_args[@]}" $(ls "$BASH_HIST_LOGS/bash-history"*.log | sort -r | tr $'\n' ' ') | sort
+    }
   fi
 }
-function hist_grep_copy () {
+function hist_grep_copy() {
   local exec_cmd_full exec_cmd exit_val
   exec_cmd_full="$(__ask_user_to_select_cmd 'hgc|hist_grep_copy' "$@")"
   exit_val="$?"
@@ -142,7 +143,7 @@ function hist_grep_copy () {
     return "$exit_val"
   fi
   echo "${exec_cmd_full}"
-  exec_cmd="$(__extract_cmd "${exec_cmd_full}")"
+  exec_cmd="$(bash_history_extract_command "${exec_cmd_full}")"
   echo -n "$exec_cmd" | pbcopy
   exit_val=$?
   if [ $exit_val -eq 0 ]; then
@@ -150,7 +151,7 @@ function hist_grep_copy () {
   fi
   return $exit_val
 }
-function hist_grep_exec () {
+function hist_grep_exec() {
   local exec_cmd_full exec_cmd exit_val
   exec_cmd_full="$(__ask_user_to_select_cmd 'hge|hist_grep_exec' "$@")"
   exit_val="$?"
@@ -158,16 +159,17 @@ function hist_grep_exec () {
     return "$exit_val"
   fi
   echo "${exec_cmd_full}"
-  exec_cmd="$(__extract_cmd "${exec_cmd_full}")"
+  exec_cmd="$(bash_history_extract_command "${exec_cmd_full}")"
   history -s $exec_cmd
   echo "Running: $exec_cmd"$'\n''---------------------------------'
   eval $exec_cmd
   return $?
 }
-function hist_grep_pwd () {
-  local search="$(pwd)\s.*${1}"; shift
+function hist_grep_pwd() {
+  local search
+  search="$(pwd)\s.*${1}" && shift
   hist_grep "${search}" "$@"
 }
-function hist_grep_unique () {
+function hist_grep_unique() {
   hist_grep "$@" | cut -f3 | awk '!x[$0]++'
 }

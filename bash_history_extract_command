@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
 # NB: the first regex removes colors from the output (https://stackoverflow.com/questions/17998978/removing-colors-from-output)
-echo "$@" |
+if test -n "${1:-}"; then
+  str="$*"
+elif ! test -t 0; then
+  str="$(cat)"
+else
+  str="$*"
+fi
+
+py_code=$(
+  cat << EOF
+import re, sys
+output = []
+for val in sys.stdin.read().splitlines(keepends=False):
+  matcher = re.match(r"(?m)^\| (.*?)\s+\| ([^|]+?)\s+\|\s+([^|]+?)\s+\|$", val)
+  if matcher:
+    output.append(matcher.group(1))
+sys.stdout.write("\n".join(output))
+EOF
+)
+
+echo "$str" |
   python -c "import re;import sys;sys.stdout.write(re.sub(r'\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]', '', sys.stdin.read()))" |
-  python -c 'import re, sys;sys.stdout.write(re.match(r"^\| (.*?)\s+\| ([^|]+?)\s+\|\s+([^|]+?)\s+\|$", sys.stdin.read()).group(1))'
+  python -c "$py_code"

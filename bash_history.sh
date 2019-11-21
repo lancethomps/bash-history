@@ -41,7 +41,7 @@ function __pull_matches() {
 }
 function __ask_user_to_select_cmd() {
   local found_cmd exit_val
-  found_cmd="$(__pull_matches "$@" | fzf --no-sort --layout=reverse --header='Please select the command from the list below.')"
+  found_cmd="$(__pull_matches "$@" | fzf --no-sort --layout=reverse --multi --header='Please select the command from the list below.')"
   exit_val="$?"
   if test "$exit_val" -ne 0; then
     return "$exit_val"

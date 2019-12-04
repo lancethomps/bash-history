@@ -21,5 +21,5 @@ EOF
 )
 
 echo "$str" |
-  python -c "import re;import sys;sys.stdout.write(re.sub(r'\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]', '', sys.stdin.read()))" |
+  python -c 'import re;import sys;sys.stdout.write(re.sub(r"\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]", "", sys.stdin.read()))' |
   python -c "$py_code"

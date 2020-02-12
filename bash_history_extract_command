@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# NB: the first regex removes colors from the output (https://stackoverflow.com/questions/17998978/removing-colors-from-output)
+################################################################### SETUP ########################################################################
+set -o errexit -o errtrace -o nounset
+##################################################################################################################################################
+
 if test -n "${1:-}"; then
   str="$*"
 elif ! test -t 0; then
@@ -8,6 +11,7 @@ else
   str="$*"
 fi
 
+# NB: the first regex removes colors from the output (https://stackoverflow.com/questions/17998978/removing-colors-from-output)
 py_code=$(
   cat << EOF
 import re, sys

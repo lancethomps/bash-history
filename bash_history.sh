@@ -85,7 +85,7 @@ function hist() {
   local out add_out all_logs
   all_logs="$(ls -t "$BASH_HIST_LOGS/bash-history"*.log)"
   while ((size > curr_size)); do
-    add_out="$(< "$(echo "$all_logs" | head "-$file_pos" | tail -1)" tail "-$remaining_size" | tail -r)"
+    add_out="$(tail < "$(echo "$all_logs" | head "-$file_pos" | tail -1)" "-$remaining_size" | tail -r)"
     add_size="$(echo "$add_out" | wc -l | tr -d '\011\012\015')"
     file_pos="$((file_pos + 1))"
     curr_size="$((curr_size + add_size))"
@@ -130,7 +130,7 @@ function hist_grep() {
   old_nullglob="$(shopt -p nullglob)"
   shopt -s nullglob
   all_log_files_temp=("$BASH_HIST_LOGS/bash-history"*.log)
-  mapfile -t all_log_files < <(sort -r <<<"${all_log_files_temp[*]}")
+  mapfile -td '' all_log_files < <(printf '%s\0' "${all_log_files_temp[@]}" | sort -rz)
   eval "$old_nullglob"
 
   if test "$use_pager" = 'true'; then

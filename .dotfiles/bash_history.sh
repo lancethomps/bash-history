@@ -15,8 +15,10 @@ elif test -w "$HOME"; then
   fi
 
   if test "$BASH_HIST_NO_SQLITE" != "true" && command -v hist_db_insert > /dev/null 2>&1; then
+    # shellcheck disable=SC2016
     log_cmd='hist_db_insert --exit-code "$?" --pid "$$" --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)"'
   else
+    # shellcheck disable=SC2016
     log_cmd='bash_history_log_to_file --exit-code $? --pid $$ --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)" --add-to-db'
   fi
   if test "$(id -u)" -ne 0; then

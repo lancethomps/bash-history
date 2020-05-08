@@ -26,7 +26,12 @@ def main():
   if should_skip_command(command, verbose=args.verbose):
     exit(0)
 
-  insert_command(command, sequence=sequence)
+  insert_command(
+    command,
+    exit_code=args.exit_code,
+    pid=args.pid,
+    sequence=sequence,
+  )
 
 
 def _parse_args() -> ScriptArgs:

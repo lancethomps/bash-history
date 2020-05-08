@@ -1,0 +1,350 @@
+#!/usr/bin/env bash
+################################################################### SETUP ########################################################################
+S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done && _SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
+set -o errexit -o errtrace -o nounset
+##################################################################################################################################################
+# shellcheck disable=SC2155
+export GPG_TTY="$(tty)"
+
+MAIN_REPOSITORY='pypi'
+TEST_REPOSITORY='pypitest'
+REPOSITORY="$MAIN_REPOSITORY"
+
+################################################################### USAGE ########################################################################
+_SCRIPT_NAME="$(basename "$0")"
+
+function _usage() {
+  cat << EOF
+NAME
+       ${_SCRIPT_NAME}
+
+SYNOPSIS
+       ${_SCRIPT_NAME} [--auto-confirm] [--test]
+          [--help] [--debug] [--verbose]
+
+EXAMPLES
+       ${_SCRIPT_NAME}
+       ${_SCRIPT_NAME} --auto-confirm
+       ${_SCRIPT_NAME} --test
+EOF
+}
+##################################################################################################################################################
+
+################################################################# SCRIPTARGS #####################################################################
+while test $# -gt 0; do
+  case "$1" in
+    -h | --help)
+      _usage
+      exit 0
+      ;;
+    --debug)
+      shift
+      export debug_mode=true
+      ;;
+    --verbose)
+      shift
+      export verbose=true
+      ;;
+    --auto-confirm)
+      shift
+      auto_confirm=true
+      ;;
+    --test)
+      shift
+      test_mode=true
+      REPOSITORY="$TEST_REPOSITORY"
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      _usage
+      exit 1
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+##################################################################################################################################################
+
+#################################################################### CUSTOM ######################################################################
+function __custom_clean_local() {
+  git clean -Xd --force -- build dist
+}
+
+function __custom_store_versions() {
+  VERSION_FILE="VERSION"
+  CURR_VERS="$(sed -E 's/ *$//g' "$VERSION_FILE" | sed -E 's/^ *//g')"
+  if test -z "${NEXT_VERS-}"; then
+    NEXT_VERS="$(increment_semver --minor 1 "$CURR_VERS")"
+  fi
+  export VERSION_FILE CURR_VERS NEXT_VERS
+}
+
+function __custom_publish() {
+  if check_debug; then
+    echo python setup.py sdist bdist_wheel
+    echo python -m twine upload --repository "$REPOSITORY" dist/*
+  else
+    python setup.py sdist bdist_wheel
+    python -m twine upload --repository "$REPOSITORY" dist/*
+  fi
+  __custom_clean_local
+}
+
+function __custom_next_version_bump() {
+  if check_debug; then
+    echo echo -n "${NEXT_VERS}" '>' "$VERSION_FILE"
+  else
+    echo -n "${NEXT_VERS}" > "$VERSION_FILE"
+  fi
+}
+##################################################################################################################################################
+
+function exiting() {
+  echo "Exiting..."
+  exit "${1:-1}"
+}
+function check_debug() {
+  test "${debug_mode:-}" = "true"
+}
+function check_test() {
+  test "${test_mode-}" = "true"
+}
+function exit_if_test() {
+  if check_test; then
+    echo "In test_mode, exiting..."
+    exit 0
+  fi
+  return 0
+}
+function confirm() {
+  local response=""
+  read -r -p "${1:-Are you sure?}"$'\n'"[Y/n]> " response
+  case "$response" in
+    [yY][eE][sS] | [yY] | "") true ;;
+    [nN][oO] | [nN]) false ;;
+    *)
+      echo "Incorrect value entered... Try again."
+      confirm "$@"
+      ;;
+  esac
+}
+function confirm_with_auto() {
+  if test "${auto_confirm:-}" = 'true'; then
+    echo "AUTO CONFIRMED: ${1:-}"
+    return 0
+  fi
+  confirm "$@"
+}
+
+function continue_because_debug() {
+  if check_debug; then
+    echo "Not exiting, as debug_mode is true..."
+    return 0
+  elif check_test; then
+    echo "Not exiting, as test_mode is true..."
+    return 0
+  else
+    return 1
+  fi
+}
+
+function check_git_default_branch() {
+  if git is-side-branch; then
+    echo "Git repo not on master branch! Make a PR to master first"
+    if continue_because_debug; then
+      return 0
+    fi
+    git status
+    exiting 1
+  fi
+  return 0
+}
+
+function check_git_dirty() {
+  if git is-dirty; then
+    echo "Git repo is dirty!"
+    if continue_because_debug; then
+      return 0
+    fi
+    git status
+    exiting 1
+  fi
+  return 0
+}
+
+function check_git_missing_commits() {
+  git fetch
+  if git has-incoming-commits; then
+    echo "Git repo is missing commits from remote!"
+    if continue_because_debug; then
+      return 0
+    fi
+    git status
+    exiting 1
+  elif git has-outgoing-commits; then
+    echo "Git repo has local commits!"
+    if continue_because_debug; then
+      return 0
+    fi
+    git status
+    exiting 1
+  fi
+  return 0
+}
+
+function check_version_bumped() {
+  if check_debug || check_test; then
+    return 0
+  fi
+
+  if ! git is-dirty; then
+    echo "Bad __custom_next_version_bump function, nothing appears to have been changed"
+    exiting 1
+  fi
+  return 0
+}
+
+function increment_semver() {
+  local version major=0 minor=0 patch=0
+  while test $# -gt 0; do
+    case "$1" in
+      --major)
+        shift
+        major="$1"
+        shift
+        ;;
+      --minor)
+        shift
+        minor="$1"
+        shift
+        ;;
+      --patch)
+        shift
+        patch="$1"
+        shift
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        echo "Unknown option: $1"
+        _usage
+        exit 1
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  version="$1"
+
+  echo "$version" |
+    awk -F. -v a="$major" -v b="$minor" -v c="$patch" '{printf("%d.%d.%d", $1+a, $2+b , $3+c)}'
+}
+
+function clean_local() {
+  __custom_clean_local
+}
+
+function store_versions() {
+  __custom_store_versions
+
+  if test -z "${VERSION_FILE-}"; then
+    echo "Bad __custom_store_versions function, VERSION_FILE variable not set"
+    exiting 1
+  elif test -z "${CURR_VERS-}"; then
+    echo "Bad __custom_store_versions function, CURR_VERS variable not set"
+    exiting 1
+  elif test -z "${NEXT_VERS-}"; then
+    echo "Bad __custom_store_versions function, NEXT_VERS variable not set"
+    exiting 1
+  fi
+  return 0
+}
+
+function publish_command() {
+  check_git_dirty
+
+  if ! confirm_with_auto "Publish version ${CURR_VERS}?"; then
+    exiting 1
+  fi
+
+  __custom_publish
+  exit_if_test
+}
+
+function tag_version() {
+  if ! confirm_with_auto "Tag version ${CURR_VERS}?"; then
+    exiting 1
+  fi
+
+  if check_debug; then
+    echo git tag "v${CURR_VERS}"
+    echo git push --tags
+  else
+    git tag "v${CURR_VERS}"
+    git push --tags
+  fi
+}
+
+function _next_version_branch() {
+  if check_debug; then
+    echo git checkout -b "$NEXT_BRANCH"
+    echo git push --set-upstream origin "$NEXT_BRANCH"
+  else
+    git checkout -b "$NEXT_BRANCH"
+    git push --set-upstream origin "$NEXT_BRANCH"
+  fi
+}
+
+function _next_version_commit() {
+  if check_debug; then
+    echo git commit -m "Prepare next version" -- "$VERSION_FILE"
+  else
+    git commit -m "Prepare next version" -- "$VERSION_FILE"
+  fi
+}
+
+function next_version() {
+  check_git_dirty
+
+  NEXT_BRANCH="${NEXT_BRANCH:-dev-v${NEXT_VERS}}"
+  export NEXT_BRANCH
+
+  if ! confirm_with_auto "Bump ${CURR_VERS} to next minor version (${NEXT_VERS}) in a new branch (${NEXT_BRANCH})?"; then
+    exiting 0
+  fi
+
+  _next_version_branch
+  __custom_next_version_bump
+  check_version_bumped
+  _next_version_commit
+
+  if ! confirm_with_auto "Push version bump updates to new branch ${NEXT_BRANCH}?"; then
+    exiting 0
+  fi
+
+  if check_debug; then
+    echo git push
+  else
+    git push
+  fi
+}
+
+cd "$_SCRIPT_DIR"
+
+check_git_default_branch
+check_git_dirty
+check_git_missing_commits
+clean_local
+store_versions
+publish_command
+tag_version
+next_version

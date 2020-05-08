@@ -19,7 +19,7 @@ elif test -w "$HOME"; then
   fi
 
   # shellcheck disable=SC2016
-  log_cmd_pre='_prev_cmd="$(fc -ln -0 2>/dev/null)"'
+  log_cmd_pre='hist_db_insert --exit-code "$?" --pid "$$" --command "$(HISTTIMEFORMAT= history 1)"; _prev_cmd="$(fc -ln -0 2>/dev/null)"'
   log_cmd_post='unset _prev_cmd'
   # shellcheck disable=SC2016
   log_cmd='if [[ ${_prev_cmd} != "	  "* ]]; then echo "$(python -c "from datetime import datetime;import sys;sys.stdout.write(datetime.now().strftime(\"%Y-%m-%d %H:%M:%S.%f\")[:-3]);")'" $log_tz_offset"$'\t'"$_PWD_PREFIX"'$(pwd)${_prev_cmd}" >> '"$BASH_HIST_LOGS"'/bash-history_$(date "+%Y-%m-%d")_'$(hostname)'.log; fi'

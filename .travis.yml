@@ -1,9 +1,21 @@
-language: bash
-dist: xenial
+language: python
 
 cache:
   directories:
   - /opt/shellcheck
+  - "$HOME/.cache/pip"
+  - "$HOME/.pyenv"
+
+python:
+- 3.6
+- 3.7
+- 3.8
+
+matrix:
+  include:
+  - python: 3.6
+  - python: 3.7
+  - python: 3.8
 
 before_install:
 - export scversion="stable" # or "v0.4.7", or "latest"
@@ -17,5 +29,8 @@ before_install:
 - which -a shellcheck
 - shellcheck --version
 
+install:
+- make init
+
 script:
-- make test
+- make ci

@@ -6,7 +6,6 @@
 .classpath
 .project
 .settings/
-/bin/
 
 ## NetBeans
 /nbproject/
@@ -31,3 +30,37 @@ out/
 
 # macOS
 .DS_Store
+
+############################
+# Languages
+############################
+
+## Python
+*.egg-info
+*.pyc
+/.coverage
+/.eggs
+/.pytest_cache
+/.tox
+/build
+/coverage.xml
+/dist
+/report.xml
+
+############################
+# Libraries
+############################
+
+## Maven
+target/
+
+## npm
+/node_modules
+
+############################
+# Misc
+############################
+**/.ant-targets-build.xml
+*~
+/.cache-*
+/*.sass-cache

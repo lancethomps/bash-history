@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+# PYTHON_ARGCOMPLETE_OK
+import argparse
+
+from bash_history.db_commands import insert_command
+from bash_history.parser import parse_history, should_skip_command
+
+
+class ScriptArgs(object):
+
+  def __init__(self, args: argparse.Namespace):
+    self.command: str = args.command
+    self.exit_code: int = args.exit_code
+    self.pid: int = args.pid
+    self.verbose: bool = args.verbose
+
+
+def main():
+  args = _parse_args()
+  sequence, command = parse_history(args.command)
+
+  if sequence is None or command is None:
+    print("Could not parse command output")
+    exit(1)
+
+  if should_skip_command(command, verbose=args.verbose):
+    exit(0)
+
+  insert_command(command, sequence=sequence)
+
+
+def _parse_args() -> ScriptArgs:
+  arg_parser = argparse.ArgumentParser()
+  arg_parser.add_argument("--exit-code", "-e", help="set to $?", default=0, type=int)
+  arg_parser.add_argument("--command", "-c", help="set to $(HISTTIMEFORMAT= history 1)", default="")
+  arg_parser.add_argument("--pid", "-p", help="set to $$", default=0, type=int)
+  arg_parser.add_argument("--verbose", action="store_true")
+  return ScriptArgs(arg_parser.parse_args())
+
+
+if __name__ == "__main__":
+  try:
+    main()
+  except KeyboardInterrupt:
+    exit(130)

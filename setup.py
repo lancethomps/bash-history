@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # pylint: disable=C0103
 import codecs
+import re
 import sys
 from pathlib import Path
 
@@ -35,8 +36,29 @@ class PyTest(TestCommand):
 requirements = codecs.open('./requirements.txt').read().splitlines()
 long_description = codecs.open('./README.md').read()
 version = codecs.open('./VERSION').read().strip()
+
+
+def include_script_file(bin_file: Path) -> bool:
+  if not bin_file.is_file():
+    return False
+
+  if bin_file.name.startswith("_"):
+    return False
+
+  with open(bin_file.as_posix(), 'r') as rf:
+    line = rf.readline()
+    if not line.strip().endswith("usr/bin/env python"):
+      return False
+
+    line = rf.readline()
+    if re.fullmatch(r"^# *skip *= *true", line.strip()):
+      return False
+
+  return True
+
+
 bin_dir = Path("./bin")
-script_files = sorted([bin_file.relative_to(bin_dir.parent).as_posix() for bin_file in bin_dir.glob("*") if bin_file.is_file() and not bin_file.name.startswith("_")])
+script_files = sorted([bin_file.relative_to(bin_dir.parent).as_posix() for bin_file in bin_dir.glob("*") if include_script_file(bin_file)])
 
 test_requirements = [
   'pytest-cov',

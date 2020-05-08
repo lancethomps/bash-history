@@ -3,6 +3,7 @@ BASH_HIST_LOGS="${BASH_HIST_LOGS:-$HOME/.logs/bash_history}"
 # shellcheck disable=SC2016
 BASH_HIST_AWK_CMD='{printf "%s\t%s\t%s\n", substr($3,2), substr($1,1,19), $2}'
 BASH_HIST_MAX_WIDTH="${BASH_HIST_MAX_WIDTH:-225}"
+BASH_HIST_NO_SQLITE="${BASH_HIST_NO_SQLITE:-false}"
 
 if test "${BASH_HIST_NO_WRITE:-}" = 'true'; then
   true
@@ -12,27 +13,22 @@ elif test -w "$HOME"; then
   else
     export PROMPT_COMMAND="$ORIG_PROMPT_COMMAND"
   fi
-  log_tz_offset=$(python -c 'import time;import sys;sys.stdout.write(time.strftime("%z"))')
-  _PWD_PREFIX=''
-  if [ "$(id -u)" -eq 0 ]; then
-    _PWD_PREFIX='root@'
-  fi
 
-  # shellcheck disable=SC2016
-  log_cmd_pre='hist_db_insert --exit-code "$?" --pid "$$" --command "$(HISTTIMEFORMAT= history 1)"; _prev_cmd="$(fc -ln -0 2>/dev/null)"'
-  log_cmd_post='unset _prev_cmd'
-  # shellcheck disable=SC2016
-  log_cmd='if [[ ${_prev_cmd} != "	  "* ]]; then echo "$(python -c "from datetime import datetime;import sys;sys.stdout.write(datetime.now().strftime(\"%Y-%m-%d %H:%M:%S.%f\")[:-3]);")'" $log_tz_offset"$'\t'"$_PWD_PREFIX"'$(pwd)${_prev_cmd}" >> '"$BASH_HIST_LOGS"'/bash-history_$(date "+%Y-%m-%d")_'$(hostname)'.log; fi'
+  if test "$BASH_HIST_NO_SQLITE" != "true" && command -v hist_db_insert > /dev/null 2>&1; then
+    log_cmd='hist_db_insert --exit-code "$?" --pid "$$" --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)"'
+  else
+    log_cmd='bash_history_log_to_file --exit-code $? --pid $$ --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)" --add-to-db'
+  fi
   if test "$(id -u)" -ne 0; then
     ! test -d "$BASH_HIST_LOGS" && mkdir -p "$BASH_HIST_LOGS"
-    export PROMPT_COMMAND="${log_cmd_pre}; ${log_cmd}; ${log_cmd_post}; ${PROMPT_COMMAND}"
+    export PROMPT_COMMAND="${log_cmd}; ${PROMPT_COMMAND}"
   elif current_user=$(/bin/ls -l /dev/console | /usr/bin/awk '{ print $3 }'); then
     ! test -d "$BASH_HIST_LOGS" && sudo -u "$current_user" mkdir -p "$BASH_HIST_LOGS"
-    export PROMPT_COMMAND="${log_cmd_pre}; ${log_cmd}; ${log_cmd_post}; ${PROMPT_COMMAND}"
+    export PROMPT_COMMAND="${log_cmd}; ${PROMPT_COMMAND}"
   else
     echo "Running as root and current logged in user could not be determined, not writing history logs..."
   fi
-  unset current_user log_cmd log_cmd_pre log_cmd_post log_tz_offset _PWD_PREFIX
+  unset current_user log_cmd
 else
   echo "It appears your home directory is read only, not writing history logs there..."
 fi

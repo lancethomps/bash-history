@@ -4,6 +4,14 @@ BASH_HIST_LOGS="${BASH_HIST_LOGS:-$HOME/.logs/bash_history}"
 BASH_HIST_AWK_CMD='{printf "%s\t%s\t%s\n", substr($3,2), substr($1,1,19), $2}'
 BASH_HIST_MAX_WIDTH="${BASH_HIST_MAX_WIDTH:-225}"
 BASH_HIST_NO_SQLITE="${BASH_HIST_NO_SQLITE:-false}"
+BASH_HIST_ADD_TO_DB="${BASH_HIST_ADD_TO_DB:-false}"
+BASH_HIST_IGNORE_MISSING_DB="${BASH_HIST_IGNORE_MISSING_DB:-false}"
+BASH_HIST_SELECT_LIMIT="${BASH_HIST_SELECT_LIMIT:-50}"
+
+_BASH_HIST_USING_SQLITE=true
+if test "$BASH_HIST_NO_SQLITE" = "true" || ! command -v hist_db_insert > /dev/null 2>&1; then
+  _BASH_HIST_USING_SQLITE=false
+fi
 
 if test "${BASH_HIST_NO_WRITE:-}" = 'true'; then
   true
@@ -14,12 +22,18 @@ elif test -w "$HOME"; then
     export PROMPT_COMMAND="$ORIG_PROMPT_COMMAND"
   fi
 
-  if test "$BASH_HIST_NO_SQLITE" != "true" && command -v hist_db_insert > /dev/null 2>&1; then
+  if test "$_BASH_HIST_USING_SQLITE" = "true"; then
     # shellcheck disable=SC2016
     log_cmd='hist_db_insert --exit-code "$?" --pid "$$" --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)"'
   else
     # shellcheck disable=SC2016
-    log_cmd='bash_history_log_to_file --exit-code $? --pid $$ --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)" --add-to-db'
+    log_cmd='bash_history_log_to_file --exit-code $? --pid $$ --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)"'
+    if test "${BASH_HIST_ADD_TO_DB}" = "true"; then
+      log_cmd="${log_cmd} --add-to-db"
+    fi
+    if test "${BASH_HIST_IGNORE_MISSING_DB}" = "true"; then
+      log_cmd="${log_cmd} --ignore-missing-db"
+    fi
   fi
   if test "$(id -u)" -ne 0; then
     ! test -d "$BASH_HIST_LOGS" && mkdir -p "$BASH_HIST_LOGS"
@@ -38,7 +52,7 @@ fi
 function __pull_matches() {
   local ignore_commands
   ignore_commands="$1" && shift
-  hist_grep "$@" | tail -n +2 | command grep -Ev '\s('"$ignore_commands"')(\s|$)' | sed '1!G;h;$!d' | head -"${BASH_HIST_SELECT_COUNT:-50}" | awk -F $'\t' "$BASH_HIST_AWK_CMD" | csvlook --tabs --no-header-row | tail -n +3
+  hist_grep "$@" | tail -n +2 | command grep -Ev '\s('"$ignore_commands"')(\s|$)' | sed '1!G;h;$!d' | head -"${BASH_HIST_SELECT_LIMIT}" | awk -F $'\t' "$BASH_HIST_AWK_CMD" | csvlook --tabs --no-header-row | tail -n +3
 }
 function __ask_user_to_select_cmd() {
   local found_cmd exit_val
@@ -181,3 +195,5 @@ function hist_grep_pwd() {
 function hist_grep_unique() {
   hist_grep "$@" | cut -f3 | awk '!x[$0]++'
 }
+
+unset _BASH_HIST_USING_SQLITE

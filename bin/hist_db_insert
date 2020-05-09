@@ -4,6 +4,7 @@ import argparse
 
 from bash_history.db_commands import insert_command
 from bash_history.parser import parse_history, should_skip_command
+from bash_history.utils import try_import_argcomplete
 
 
 class ScriptArgs(object):
@@ -36,10 +37,13 @@ def main():
 
 def _parse_args() -> ScriptArgs:
   arg_parser = argparse.ArgumentParser()
+
   arg_parser.add_argument("--exit-code", "-e", help="set to $?", default=0, type=int)
   arg_parser.add_argument("--command", "-c", help="set to $(HISTTIMEFORMAT= history 1)", default="")
   arg_parser.add_argument("--pid", "-p", help="set to $$", default=0, type=int)
   arg_parser.add_argument("--verbose", action="store_true")
+
+  try_import_argcomplete(arg_parser)
   return ScriptArgs(arg_parser.parse_args())
 
 

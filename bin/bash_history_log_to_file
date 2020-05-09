@@ -20,6 +20,10 @@ while test $# -gt 0; do
       add_to_db=true
       shift
       ;;
+    --ignore-missing-db)
+      ignore_missing_db=true
+      shift
+      ;;
     --command)
       shift
       command="$1"
@@ -73,7 +77,14 @@ function get_pwd_prefix() {
 tab_char=$'\t'
 echo "$(get_at)${tab_char}$(get_pwd_prefix)$(pwd)${tab_char} ${command_part}" >> "${BASH_HIST_LOGS}/bash-history_$(date "+%Y-%m-%d")_$(hostname).log"
 
-if test "${add_to_db-}" = "true" && command -v hist_db_insert > /dev/null 2>&1; then
+if test "${add_to_db-}" = "true"; then
+  if ! command -v hist_db_insert > /dev/null 2>&1; then
+    if test "${ignore_missing_db-}" = "true"; then
+      exit 0
+    fi
+    echo "No hist_db_insert command found, but --add-to-db set"
+    exit 1
+  fi
   hist_db_insert_args=(
     --command "${command}"
     --exit-code "${exit_code-}"

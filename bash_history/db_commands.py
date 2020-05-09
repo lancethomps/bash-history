@@ -3,11 +3,24 @@ import os
 import sqlite3
 from datetime import datetime
 from getpass import getuser
+from typing import List, Tuple
 
 from bash_history import db_connection
+from bash_history.configs import BashHistorySelectArgs
 
 
 class SQL:
+  COLUMNS = [
+    "command",
+    "at",
+    "host",
+    "pwd",
+    "user",
+    "exit_code",
+    "pid",
+    "sequence",
+  ]
+
   CREATE_COMMANDS: str = """
     DROP TABLE IF EXISTS commands
     ;
@@ -45,6 +58,55 @@ def create_db():
   db_conn.executescript(SQL.CREATE_COMMANDS)
   db_conn.commit()
   db_conn.close()
+
+
+def query_builder(args: BashHistorySelectArgs) -> Tuple[str, list]:
+  params = []
+
+  filters = ["1"]
+
+  if args.pattern:
+    filters.append("command REGEXP ?")
+    params.append(args.pattern)
+
+  sql = """
+    SELECT %s
+    FROM commands
+    WHERE %s
+    ORDER BY %s
+    LIMIT ?
+  """ % (
+    ",".join(args.columns),
+    " AND ".join(filters),
+    args.limit_order,
+  )
+  params.append(args.limit)
+  return sql, params
+
+
+def select_commands(
+  args: BashHistorySelectArgs,
+  db_conn: sqlite3.Connection = None,
+) -> List[dict]:
+  close_after = False
+  if not db_conn:
+    close_after = True
+    db_conn = db_connection.connect(load_regexp=True)
+
+  results: List[dict] = []
+  query, params = query_builder(args)
+
+  for row in db_conn.cursor().execute(query, params):
+    row_dict = {}
+    for idx in range(len(row)):
+      row_dict[args.columns[idx]] = row[idx]
+
+    print("\t".join(row))
+
+  if close_after:
+    db_connection.close(db_conn, commit=False)
+
+  return results
 
 
 def insert_command(

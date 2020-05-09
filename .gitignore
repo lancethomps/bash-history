@@ -41,6 +41,7 @@ out/
 /.coverage
 /.eggs
 /.pytest_cache
+/.mypy_cache
 /.tox
 /build
 /coverage.xml

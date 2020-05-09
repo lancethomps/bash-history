@@ -5,12 +5,20 @@ import sqlite3
 from bash_history import db_commands
 
 
-def connect(create_if_missing: bool = True) -> sqlite3.Connection:
+def connect(
+  create_if_missing: bool = True,
+  load_regexp: bool = False,
+) -> sqlite3.Connection:
   db_file = get_db_file()
   if create_if_missing and not os.path.exists(db_file):
     db_commands.create_db()
 
-  return sqlite3.connect(db_file)
+  db_conn = sqlite3.connect(db_file)
+
+  if load_regexp:
+    load_regexp_function(db_conn)
+
+  return db_conn
 
 
 def close(db_conn: sqlite3.Connection, commit: bool = True):
@@ -20,3 +28,20 @@ def close(db_conn: sqlite3.Connection, commit: bool = True):
 
 def get_db_file() -> str:
   return os.getenv("BASH_HIST_DB", os.path.expanduser("~/.bash_history.db"))
+
+
+def load_regexp_function(db_conn):
+  try:
+    import pcre
+
+    def sqlite_regexp(regex, item):
+      return pcre.search(regex, item) is not None
+
+    db_conn.create_function("REGEXP", 2, sqlite_regexp)
+  except ImportError:
+    import re
+
+    def sqlite_regexp(regex, item):
+      return re.search(regex, item) is not None
+
+    db_conn.create_function("REGEXP", 2, sqlite_regexp)

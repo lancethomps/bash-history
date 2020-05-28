@@ -79,7 +79,7 @@ function __custom_store_versions() {
   VERSION_FILE="VERSION"
   CURR_VERS="$(sed -E 's/ *$//g' "$VERSION_FILE" | sed -E 's/^ *//g')"
   if test -z "${NEXT_VERS-}"; then
-    NEXT_VERS="$(increment_semver --minor 1 "$CURR_VERS")"
+    NEXT_VERS="$(increment_semver --minor 1 --reset-all "$CURR_VERS")"
   fi
   export VERSION_FILE CURR_VERS NEXT_VERS
 }
@@ -210,7 +210,7 @@ function check_version_bumped() {
 }
 
 function increment_semver() {
-  local version major=0 minor=0 patch=0
+  local version major=0 minor=0 patch=0 reset_all reset_minor reset_patch
   while test $# -gt 0; do
     case "$1" in
       --major)
@@ -226,6 +226,18 @@ function increment_semver() {
       --patch)
         shift
         patch="$1"
+        shift
+        ;;
+      --reset-all)
+        reset_all=true
+        shift
+        ;;
+      --reset-minor)
+        reset_minor=true
+        shift
+        ;;
+      --reset-patch)
+        reset_patch=true
         shift
         ;;
       --)
@@ -244,6 +256,31 @@ function increment_semver() {
   done
 
   version="$1"
+
+  if test "${reset_all-}" = "true"; then
+    if test "$patch" -eq 0; then
+      reset_patch=true
+      if test "$minor" -eq 0; then
+        reset_minor=true
+      fi
+    fi
+  fi
+
+  if test "${reset_minor-}" = "true"; then
+    if test "$minor" -ne 0; then
+      echo "Cannot specify --reset-minor along with a --minor argument"
+      return 1
+    fi
+    minor="-$(echo "$version" | awk -F. '{print $2}')"
+  fi
+
+  if test "${reset_patch-}" = "true"; then
+    if test "$patch" -ne 0; then
+      echo "Cannot specify --reset-patch along with a --patch argument"
+      return 1
+    fi
+    patch="-$(echo "$version" | awk -F. '{print $3}')"
+  fi
 
   echo "$version" |
     awk -F. -v a="$major" -v b="$minor" -v c="$patch" '{printf("%d.%d.%d", $1+a, $2+b , $3+c)}'

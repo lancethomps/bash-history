@@ -6,8 +6,8 @@ import logging
 from typing import List, Tuple
 
 from bashhistory.configs import BashHistoryColorArgs, BashHistoryConfig, BashHistoryPagerArgs, BashHistorySelectArgs, get_or_load_config
-from bashhistory.db_commands import select_commands
 from bashhistory.output import ask_user_to_select_command, create_results_output
+from bashhistory.query_runner import query_db
 from bashhistory.utils import try_import_argcomplete
 from ltpylib import logs, macos, opts, procs
 
@@ -24,39 +24,51 @@ class SelectScriptArgs(BashHistoryColorArgs, BashHistoryPagerArgs, BashHistorySe
 
 
 def hist():
-  _query_db_and_output(with_pattern_positional=False)
+  try:
+    _query_db_and_output(with_pattern_positional=False)
+  except KeyboardInterrupt:
+    exit(130)
 
 
 def hist_grep():
-  _query_db_and_output(with_pattern_positional=True)
+  try:
+    _query_db_and_output(with_pattern_positional=True)
+  except KeyboardInterrupt:
+    exit(130)
 
 
 def hist_grep_copy():
-  selected_commands = _query_db_and_select_commands()
-  print("\n".join(selected_commands))
-  macos.pbcopy("\n".join(selected_commands))
-  logging.info("Copied!")
+  try:
+    selected_commands = _query_db_and_select_commands()
+    print("\n".join(selected_commands))
+    macos.pbcopy("\n".join(selected_commands))
+    logging.info("Copied!")
+  except KeyboardInterrupt:
+    exit(130)
 
 
 def hist_grep_exec():
-  selected_commands = _query_db_and_select_commands()
-  exit_code = 0
-  for command in selected_commands:
-    logging.warning("Running: %s\n%s", command, logs.LOG_SEP)
-    result = procs.run_with_regular_stdout(
-      ["bash", "-c", command],
-      check=False,
-    )
-    if result.returncode != 0:
-      exit_code = result.returncode
+  try:
+    selected_commands = _query_db_and_select_commands()
+    exit_code = 0
+    for command in selected_commands:
+      logging.warning("Running: %s\n%s", command, logs.LOG_SEP)
+      result = procs.run_with_regular_stdout(
+        ["bash", "-c", command],
+        check=False,
+      )
+      if result.returncode != 0:
+        exit_code = result.returncode
 
-  exit(exit_code)
+    exit(exit_code)
+  except KeyboardInterrupt:
+    exit(130)
 
 
 def _query_db_and_select_commands() -> List[str]:
   config, args = _get_config_and_args()
 
-  results, column_max_lengths = select_commands(args, use_command_line=True)
+  results, column_max_lengths = query_db(args, config=config, use_command_line=True)
 
   if not results:
     exit(1)
@@ -71,7 +83,7 @@ def _query_db_and_output(with_pattern_positional: bool = True):
   if not with_pattern_positional:
     args.pattern = None
 
-  results, column_max_lengths = select_commands(args, use_command_line=True)
+  results, column_max_lengths = query_db(args, config=config, use_command_line=True)
 
   if not results:
     exit(1)

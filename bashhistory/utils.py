@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import logging
-from typing import List
+import shutil
+from pathlib import Path
 
 
 class Term:
@@ -14,20 +15,20 @@ class Term:
   ENDC = '\033[0m'
 
 
-def filter_for_unique_commands(results: List[dict]) -> List[dict]:
-  filtered = []
-  found_commands = []
-  for result in results:
-    command = result.get("command")
-    if not command:
-      filtered.append(result)
-    elif command in found_commands:
-      continue
-    else:
-      found_commands.append(command)
-      filtered.append(result)
+def can_use_sqlite_command_line(sqlite_regexp_loader: str) -> bool:
+  if shutil.which("sqlite3") is None:
+    logging.debug("CANNOT USE SQLITE COMMAND LINE. Could not find sqlite3 executable.")
+    return False
 
-  return filtered
+  if not sqlite_regexp_loader:
+    logging.debug("CANNOT USE SQLITE COMMAND LINE. No sqlite_regexp_loader config file supplied.")
+    return False
+
+  if not Path(sqlite_regexp_loader).exists() or not Path(sqlite_regexp_loader).is_file():
+    logging.debug("CANNOT USE SQLITE COMMAND LINE. sqlite_regexp_loader config file not found: %s", sqlite_regexp_loader)
+    return False
+
+  return True
 
 
 def log_sql_callback(query: str):

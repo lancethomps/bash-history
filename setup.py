@@ -103,4 +103,12 @@ setup(
   },
   tests_require=test_requirements,
   scripts=script_files,
+  entry_points={
+    "console_scripts": [
+      "hist = bash_history.hist:hist",
+      "hist_grep = bash_history.hist:hist_grep",
+      "hist_grep_copy = bash_history.hist:hist_grep_copy",
+      "hist_grep_exec = bash_history.hist:hist_grep_exec",
+    ]
+  },
 )

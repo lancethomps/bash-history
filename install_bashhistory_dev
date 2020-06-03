@@ -6,15 +6,6 @@ set -o errexit -o errtrace -o nounset
 shopt -s expand_aliases
 ##################################################################################################################################################
 
-CONSOLE_SCRIPTS=(
-  hist
-  hist_db_create
-  hist_db_insert
-  hist_grep
-  hist_grep_copy
-  hist_grep_exec
-)
-
 if test "$(uname)" = "Darwin"; then
   if command -v gsed > /dev/null 2>&1; then
     alias sed_ext_in_place='gsed -i -r'
@@ -48,6 +39,7 @@ function fix_pyenv_console_script_shims() {
 install_pip
 
 if command -v pyenv > /dev/null 2>&1 && pyenv which hist > /dev/null 2>&1; then
+  mapfile -t CONSOLE_SCRIPTS < <(python -c 'import os; from ltpylib import configs; print("\n".join(configs.read_properties(os.getcwd() + "/bashhistory.egg-info/entry_points.txt", use_mock_default_section=False).options("console_scripts")))')
   for console_script in "${CONSOLE_SCRIPTS[@]}"; do
     fix_pyenv_console_script_shims "$console_script"
   done

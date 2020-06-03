@@ -1,9 +1,22 @@
 #!/usr/bin/env python
 from typing import List, Tuple, Union
 
-from bashhistory.configs import BashHistorySelectArgs
+from bashhistory.configs import SelectScriptArgs
 
 OP_REGEXP = "REGEXP"
+SELF_COMMANDS = [
+  "hg",
+  "hgc",
+  "hge",
+  "hgp",
+  "hgu",
+  "hist",
+  "hist_db_create",
+  "hist_db_insert",
+  "hist_grep",
+  "hist_grep_copy",
+  "hist_grep_exec",
+]
 
 
 def add_filter_if_valid(
@@ -49,7 +62,7 @@ def create_sql(query: str, params: list) -> str:
   return "".join(parsed_query_parts)
 
 
-def query_builder(args: BashHistorySelectArgs, use_command_line: bool = False) -> Tuple[str, list]:
+def query_builder(args: SelectScriptArgs, use_command_line: bool = False) -> Tuple[str, list]:
   params = []
 
   filters = ["1"]
@@ -60,15 +73,24 @@ def query_builder(args: BashHistorySelectArgs, use_command_line: bool = False) -
   add_filter_if_valid(filters, params, "pwd", args.dir)
   add_filter_if_valid(filters, params, "pwd", args.dir_regex, sql_operator=OP_REGEXP)
   add_filter_if_valid(filters, params, "user", args.user)
+  if not args.return_self:
+    add_filter_if_valid(filters, params, "command", "^(%s)($| )" % "|".join(SELF_COMMANDS), sql_operator=("NOT " + OP_REGEXP))
 
   if args.pattern:
+    pattern = args.pattern
+    ignore_case = args.should_ignore_case(pattern)
     pattern_type = OP_REGEXP
     if args.pattern_exact:
       pattern_type = "="
     elif args.pattern_sql:
-      pattern_type = "LIKE"
+      if ignore_case:
+        pattern_type = "ILIKE"
+      else:
+        pattern_type = "LIKE"
+    elif ignore_case:
+      pattern = "(?i)" + pattern
 
-    add_filter_if_valid(filters, params, "command", args.pattern, pattern_type)
+    add_filter_if_valid(filters, params, "command", pattern, pattern_type)
 
   if use_command_line:
     field_and_columns = []

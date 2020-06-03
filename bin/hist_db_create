@@ -1,8 +1,0 @@
-#!/usr/bin/env python
-# skip=true
-
-from bashhistory.cli import hist_db_create
-
-
-def main():
-  hist_db_create()

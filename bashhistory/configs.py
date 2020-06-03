@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 from bashhistory.utils import Term
+from ltpylib.opts import PagerArgs, RegexCasingArgs
 
 
 class BashHistoryConfig(object):
@@ -83,30 +84,6 @@ class BashHistoryColorArgs(object):
     return arg_parser
 
 
-class BashHistoryPagerArgs(object):
-
-  def __init__(self, args: argparse.Namespace):
-    self.no_pager: bool = args.no_pager
-    self.pager: str = args.pager
-    self.use_pager: bool = args.use_pager
-
-  def should_use_pager(self, default: bool = True) -> bool:
-    if self.use_pager:
-      return True
-
-    if self.no_pager:
-      return False
-
-    return default
-
-  @staticmethod
-  def add_arguments_to_parser(arg_parser: argparse.ArgumentParser, config: BashHistoryConfig) -> argparse.ArgumentParser:
-    arg_parser.add_argument('--no-pager', action="store_true")
-    arg_parser.add_argument('--pager', default=config.pager)
-    arg_parser.add_argument('--use-pager', action="store_true")
-    return arg_parser
-
-
 class BashHistorySelectArgs(object):
 
   def __init__(self, args: argparse.Namespace):
@@ -124,6 +101,7 @@ class BashHistorySelectArgs(object):
 
     self.me: bool = args.me
     self.pwd: bool = args.pwd
+    self.return_self: bool = args.return_self
     self.root: bool = args.root
 
     if self.me:
@@ -158,6 +136,7 @@ class BashHistorySelectArgs(object):
 
     arg_parser.add_argument("--me", action="store_true")
     arg_parser.add_argument("--pwd", "-p", action="store_true")
+    arg_parser.add_argument("--return-self", action="store_true")
     arg_parser.add_argument("--root", action="store_true")
 
     if with_pattern_positional:
@@ -166,6 +145,26 @@ class BashHistorySelectArgs(object):
       arg_parser.add_argument('pattern')
 
     return arg_parser
+
+
+class InsertScriptArgs(BashHistoryBaseArgs):
+
+  def __init__(self, args: argparse.Namespace):
+    BashHistoryBaseArgs.__init__(self, args)
+
+    self.command: str = args.command
+    self.exit_code: int = args.exit_code
+    self.pid: int = args.pid
+
+
+class SelectScriptArgs(BashHistoryBaseArgs, BashHistoryColorArgs, PagerArgs, RegexCasingArgs, BashHistorySelectArgs):
+
+  def __init__(self, args: argparse.Namespace):
+    BashHistoryBaseArgs.__init__(self, args)
+    BashHistoryColorArgs.__init__(self, args)
+    PagerArgs.__init__(self, args)
+    RegexCasingArgs.__init__(self, args)
+    BashHistorySelectArgs.__init__(self, args)
 
 
 LOADED_CONFIG: Union[BashHistoryConfig, None] = None

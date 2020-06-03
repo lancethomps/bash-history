@@ -5,28 +5,9 @@ import argparse
 import logging
 from typing import List, Tuple
 
-from bashhistory.configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistoryPagerArgs, BashHistorySelectArgs, get_or_load_config
+from bashhistory.configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistorySelectArgs, get_or_load_config, InsertScriptArgs, SelectScriptArgs
 from bashhistory.utils import try_import_argcomplete
-from ltpylib.opts import parse_args_and_init_others
-
-
-class InsertScriptArgs(BashHistoryBaseArgs):
-
-  def __init__(self, args: argparse.Namespace):
-    BashHistoryBaseArgs.__init__(self, args)
-
-    self.command: str = args.command
-    self.exit_code: int = args.exit_code
-    self.pid: int = args.pid
-
-
-class SelectScriptArgs(BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryPagerArgs, BashHistorySelectArgs):
-
-  def __init__(self, args: argparse.Namespace):
-    BashHistoryBaseArgs.__init__(self, args)
-    BashHistoryColorArgs.__init__(self, args)
-    BashHistoryPagerArgs.__init__(self, args)
-    BashHistorySelectArgs.__init__(self, args)
+from ltpylib.opts import PagerArgs, parse_args_and_init_others, RegexCasingArgs
 
 
 def hist():
@@ -183,7 +164,8 @@ def _parse_select_args(config: BashHistoryConfig, with_pattern_positional: bool)
   arg_parser = _create_arg_parser()
 
   BashHistoryColorArgs.add_arguments_to_parser(arg_parser)
-  BashHistoryPagerArgs.add_arguments_to_parser(arg_parser, config)
+  PagerArgs.add_arguments_to_parser(arg_parser, default_pager=config.pager)
+  RegexCasingArgs.add_arguments_to_parser(arg_parser)
   BashHistorySelectArgs.add_arguments_to_parser(arg_parser, config, with_pattern_positional=with_pattern_positional)
 
   try_import_argcomplete(arg_parser)

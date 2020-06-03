@@ -5,14 +5,14 @@ import sqlite3
 from typing import Dict, List, Tuple
 
 from bashhistory import db_connection
-from bashhistory.configs import BashHistoryConfig, BashHistorySelectArgs, get_or_load_config
+from bashhistory.configs import BashHistoryConfig, get_or_load_config, SelectScriptArgs
 from bashhistory.query_creator import create_sql, query_builder
 from bashhistory.utils import can_use_sqlite_command_line, log_sql_callback
 from ltpylib import procs
 
 
 def query_db(
-  args: BashHistorySelectArgs,
+  args: SelectScriptArgs,
   config: BashHistoryConfig = None,
   db_conn: sqlite3.Connection = None,
   use_command_line: bool = False,
@@ -57,14 +57,16 @@ def query_db(
   return results, column_max_lengths
 
 
-def query_via_command_line(config: BashHistoryConfig, args: BashHistorySelectArgs, query: str, params: List) -> List[dict]:
+def query_via_command_line(config: BashHistoryConfig, args: SelectScriptArgs, query: str, params: List) -> List[dict]:
   results: List[dict] = []
+  parsed_sql = create_sql(query, params)
+  logging.debug("SQL QUERY\n%s", parsed_sql)
   command_result = procs.run([
     "sqlite3",
     "-cmd",
     ".load %s" % config.sqlite_regexp_loader,
     db_connection.get_db_file(),
-    create_sql(query, params),
+    parsed_sql,
   ], check=True)
 
   for line in command_result.stdout.splitlines():
@@ -73,7 +75,7 @@ def query_via_command_line(config: BashHistoryConfig, args: BashHistorySelectArg
   return results
 
 
-def query_via_python(config: BashHistoryConfig, args: BashHistorySelectArgs, query: str, params: List, db_conn: sqlite3.Connection) -> List[dict]:
+def query_via_python(config: BashHistoryConfig, args: SelectScriptArgs, query: str, params: List, db_conn: sqlite3.Connection) -> List[dict]:
   results: List[dict] = []
   for row in db_conn.cursor().execute(query, params):
     row_dict = {}

@@ -32,7 +32,7 @@ def can_use_sqlite_command_line(sqlite_regexp_loader: str) -> bool:
 
 
 def log_sql_callback(query: str):
-  logging.debug(query)
+  logging.debug("SQL QUERY\n%s", query)
 
 
 def try_import_argcomplete(arg_parser):

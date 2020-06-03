@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-from typing import Dict, List, Union
+from typing import Dict, List
 
-from bashhistory.configs import BashHistoryColorArgs, BashHistoryConfig, BashHistoryPagerArgs, BashHistorySelectArgs
+from bashhistory.configs import BashHistoryColorArgs, BashHistoryConfig, SelectScriptArgs
 from bashhistory.utils import Term
 from ltpylib.inputs import select_prompt
 
@@ -20,9 +20,7 @@ def colorize_result(config: BashHistoryConfig, args: BashHistoryColorArgs, colum
   return value
 
 
-def create_results_output(
-  config: BashHistoryConfig, args: Union[BashHistoryColorArgs, BashHistoryPagerArgs, BashHistorySelectArgs], results: List[dict], column_max_lengths: Dict[str, int]
-) -> List[str]:
+def create_results_output(config: BashHistoryConfig, args: SelectScriptArgs, results: List[dict], column_max_lengths: Dict[str, int]) -> List[str]:
   output_lines = []
 
   format_str_parts = []

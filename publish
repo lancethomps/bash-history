@@ -71,7 +71,7 @@ while test $# -gt 0; do
     --next-version)
       shift
       export NEXT_VERS="$1"
-      has_custom_next_version=true
+      export has_custom_next_version=true
       shift
       ;;
     *)

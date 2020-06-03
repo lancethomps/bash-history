@@ -30,6 +30,7 @@ _BH_FUNCS=(
   hist_grep_unique
 )
 unset -f "${_BH_FUNCS[@]}" > /dev/null 2>&1 || true
+# shellcheck source=.dotfiles/.bash_history_vanilla_bash.sh
 source "${_SCRIPT_DIR}/.bash_history_vanilla_bash.sh"
 
 ##################################################################################################################################################

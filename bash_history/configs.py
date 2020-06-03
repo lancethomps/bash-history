@@ -2,7 +2,11 @@
 import argparse
 import configparser
 import os
-from typing import List, Union
+from getpass import getuser
+from pathlib import Path
+from typing import Dict, List, Union
+
+from bash_history.utils import Term
 
 
 class BashHistoryConfig(object):
@@ -28,6 +32,22 @@ class BashHistoryConfig(object):
     self.limit_order = defaults.get("limit_order", "at DESC")
     self.pager = defaults.get("pager") if "pager" in defaults else os.getenv("BASH_HIST_PAGER", os.getenv("PAGER"))
     self.sqlite_regexp_loader = defaults.get("sqlite_regexp_loader")
+
+    self.column_colors: Dict[str, str] = {
+      "at": Term.YELLOW,
+    }
+    if "column_colors" in defaults:
+      for mapping in defaults.get("column_colors").split(","):
+        column, color_name = mapping.split("=")
+
+        if color_name.upper() == "NONE":
+          self.column_colors.pop(column)
+          continue
+
+        if not hasattr(Term, color_name.upper()):
+          raise ValueError("column_colors config using invalid color: %s" % mapping)
+
+        self.column_colors[column] = getattr(Term, color_name.upper())
 
 
 class BashHistoryColorArgs(object):
@@ -82,14 +102,58 @@ class BashHistorySelectArgs(object):
     self.columns: List[str] = args.columns.split(",")
     self.limit: int = args.limit
     self.limit_order = args.limit_order
-    self.pattern: str = args.pattern
+    self.unique: bool = args.unique
+
+    self.dir: List[str] = args.dir if args.dir else []
+    self.dir_regex: str = args.dir_regex
+    self.exit_code: List[int] = args.exit_code if args.exit_code else []
+    self.host: List[str] = args.host if args.host else []
+    self.host_regex: str = args.host_regex
+    self.user: List[str] = args.user if args.user else []
+
+    self.me: bool = args.me
+    self.pwd: bool = args.pwd
+    self.root: bool = args.root
+
+    if self.me:
+      self.user.append(getuser())
+
+    if self.pwd:
+      self.dir.append(os.getcwd())
+
+    if self.root:
+      self.user.append("root")
+
+    self.pattern: str = args.pattern if "pattern" in args else None
+    self.pattern_exact: bool = args.pattern_exact if "pattern_exact" in args else False
+    self.pattern_sql: bool = args.pattern_sql if "pattern_sql" in args else False
+
+    if self.dir:
+      self.dir = [Path(filter_dir).as_posix() for filter_dir in self.dir]
 
   @staticmethod
-  def add_arguments_to_parser(arg_parser: argparse.ArgumentParser, config: BashHistoryConfig) -> argparse.ArgumentParser:
-    arg_parser.add_argument("--columns", default=config.columns)
-    arg_parser.add_argument("--limit", type=int, default=config.limit)
+  def add_arguments_to_parser(arg_parser: argparse.ArgumentParser, config: BashHistoryConfig, with_pattern_positional: bool = True) -> argparse.ArgumentParser:
+    arg_parser.add_argument("--columns", "-c", default=config.columns)
+    arg_parser.add_argument("--limit", "-l", type=int, default=config.limit)
     arg_parser.add_argument("--limit-order", default=config.limit_order)
-    arg_parser.add_argument('pattern')
+    arg_parser.add_argument("--unique", "-u", action="store_true")
+    
+    arg_parser.add_argument("--dir", "-d", action="append")
+    arg_parser.add_argument("--dir-regex", "-dr")
+    arg_parser.add_argument("--exit-code", action="append", type=int)
+    arg_parser.add_argument("--host", action="append")
+    arg_parser.add_argument("--host-regex", "-hr")
+    arg_parser.add_argument("--user", action="append")
+
+    arg_parser.add_argument("--me", action="store_true")
+    arg_parser.add_argument("--pwd", "-p", action="store_true")
+    arg_parser.add_argument("--root", action="store_true")
+
+    if with_pattern_positional:
+      arg_parser.add_argument("--pattern-exact", "-exact", action="store_true")
+      arg_parser.add_argument("--pattern-sql", "-sql", action="store_true")
+      arg_parser.add_argument('pattern')
+      
     return arg_parser
 
 

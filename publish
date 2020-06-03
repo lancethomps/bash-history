@@ -2,13 +2,10 @@
 ################################################################### SETUP ########################################################################
 S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done && _SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
 set -o errexit -o errtrace -o nounset
-##################################################################################################################################################
 # shellcheck disable=SC2155
 export GPG_TTY="$(tty)"
-
-MAIN_REPOSITORY='pypi'
-TEST_REPOSITORY='pypitest'
-REPOSITORY="$MAIN_REPOSITORY"
+export vers_bump_type="minor"
+##################################################################################################################################################
 
 ################################################################### USAGE ########################################################################
 _SCRIPT_NAME="$(basename "$0")"
@@ -19,13 +16,15 @@ NAME
        ${_SCRIPT_NAME}
 
 SYNOPSIS
-       ${_SCRIPT_NAME} [--auto-confirm] [--test]
+       ${_SCRIPT_NAME} [--auto-confirm] [--bump-major] [--bump-minor] [--bump-patch] [--next-only] [--test] [--next-version <NEXT_VERS>]
           [--help] [--debug] [--verbose]
 
 EXAMPLES
        ${_SCRIPT_NAME}
        ${_SCRIPT_NAME} --auto-confirm
+       ${_SCRIPT_NAME} --bump-patch
        ${_SCRIPT_NAME} --test
+       ${_SCRIPT_NAME} --next-version 3.5.4
 EOF
 }
 ##################################################################################################################################################
@@ -49,77 +48,85 @@ while test $# -gt 0; do
       shift
       auto_confirm=true
       ;;
+    --bump-major)
+      vers_bump_type="major"
+      shift
+      ;;
+    --bump-minor)
+      vers_bump_type="minor"
+      shift
+      ;;
+    --bump-patch)
+      vers_bump_type="patch"
+      shift
+      ;;
+    --next-only)
+      next_only=true
+      shift
+      ;;
     --test)
       shift
       test_mode=true
-      REPOSITORY="$TEST_REPOSITORY"
       ;;
-    --)
+    --next-version)
       shift
-      break
+      export NEXT_VERS="$1"
+      has_custom_next_version=true
+      shift
       ;;
-    -*)
+    *)
       echo "Unknown option: $1"
       _usage
       exit 1
-      ;;
-    *)
-      break
       ;;
   esac
 done
 ##################################################################################################################################################
 
-#################################################################### CUSTOM ######################################################################
-function __custom_clean_local() {
-  git clean -Xd --force -- build dist
+################################################################# COMMON COPY ####################################################################
+function repeat_char() {
+  head -c "$2" < /dev/zero | tr '\0' "$1"
 }
-
-function __custom_store_versions() {
-  VERSION_FILE="VERSION"
-  CURR_VERS="$(sed -E 's/ *$//g' "$VERSION_FILE" | sed -E 's/^ *//g')"
-  if test -z "${NEXT_VERS-}"; then
-    NEXT_VERS="$(increment_semver --minor 1 --reset-all "$CURR_VERS")"
+function get_sep_cols() {
+  local sep_cols=160 term_cols
+  if command -v 'get_terminal_columns' > /dev/null 2>&1; then
+    term_cols="$(get_terminal_columns)"
+    if test -n "$term_cols"; then
+      sep_cols="$term_cols"
+    fi
   fi
-  export VERSION_FILE CURR_VERS NEXT_VERS
-}
-
-function __custom_publish() {
-  if check_debug; then
-    echo python setup.py sdist bdist_wheel
-    echo python -m twine upload --repository "$REPOSITORY" dist/*
-  else
-    python setup.py sdist bdist_wheel
-    python -m twine upload --repository "$REPOSITORY" dist/*
+  if test -n "${1-}"; then
+    sep_cols="$((sep_cols / $1))"
   fi
-  __custom_clean_local
+  echo -n "$sep_cols"
 }
-
-function __custom_next_version_bump() {
-  if check_debug; then
-    echo echo -n "${NEXT_VERS}" '>' "$VERSION_FILE"
-  else
-    echo -n "${NEXT_VERS}" > "$VERSION_FILE"
-  fi
-}
-##################################################################################################################################################
-
-function exiting() {
-  echo "Exiting..."
-  exit "${1:-1}"
-}
-function check_debug() {
-  test "${debug_mode:-}" = "true"
-}
-function check_test() {
-  test "${test_mode-}" = "true"
-}
-function exit_if_test() {
-  if check_test; then
-    echo "In test_mode, exiting..."
-    exit 0
+function get_terminal_sep() {
+  if [ -z "${TERMINAL_SEP:-}" ]; then
+    local rep_count
+    rep_count=$(get_sep_cols 2)
+    TERMINAL_SEP="$(repeat_char '-' "$rep_count")"
+    export TERMINAL_SEP
   fi
   return 0
+}
+function echo_sep() {
+  get_terminal_sep
+  echo "$TERMINAL_SEP"
+}
+function echo_with_sep() {
+  echo_sep
+  echo "$@"
+  echo_sep
+}
+function check_debug() {
+  check_true "${debug_mode:-}"
+}
+function check_true() {
+  if test -z "${1:-}"; then
+    return 1
+  fi
+  local val="${1,,}"
+  test "$val" = "true" && return 0 || test "$val" = "1" && return 0 || test "$val" = "yes" && return 0 || test "$val" = "y" && return 0 || return 1
 }
 function confirm() {
   local response=""
@@ -139,6 +146,29 @@ function confirm_with_auto() {
     return 0
   fi
   confirm "$@"
+}
+##################################################################################################################################################
+
+#################################################################### MAIN ########################################################################
+function exiting() {
+  echo "Exiting..."
+  exit "${1:-1}"
+}
+
+function check_test() {
+  test "${test_mode-}" = "true"
+}
+
+function check_next_only() {
+  test "${next_only-}" = "true"
+}
+
+function exit_if_test() {
+  if check_test; then
+    echo "In test_mode, exiting..."
+    exit 0
+  fi
+  return 0
 }
 
 function continue_because_debug() {
@@ -169,6 +199,8 @@ function check_git_dirty() {
   if git is-dirty; then
     echo "Git repo is dirty!"
     if continue_because_debug; then
+      return 0
+    elif check_next_only; then
       return 0
     fi
     git status
@@ -306,6 +338,33 @@ function store_versions() {
   return 0
 }
 
+function display_info_and_confirm() {
+  local display_infos=(
+    auto_confirm "${auto_confirm:-false}"
+    debug_mode "${debug_mode:-false}"
+    test_mode "${test_mode:-false}"
+    verbose "${verbose:-false}"
+    vers_bump_type "$vers_bump_type"
+    VERSION_FILE "$VERSION_FILE"
+    CURR_VERS "$CURR_VERS"
+    NEXT_VERS "$NEXT_VERS"
+  )
+
+  echo_sep
+
+  while test "${#display_infos[@]}" -gt 0; do
+    printf "%-50s -> %s\n" "${display_infos[0]}" "${display_infos[1]}"
+    display_infos=("${display_infos[@]:2}")
+  done
+
+  echo_sep
+
+  if ! confirm_with_auto "Continue with publish?"; then
+    exiting 1
+  fi
+  return 0
+}
+
 function publish_command() {
   check_git_dirty
 
@@ -375,13 +434,65 @@ function next_version() {
   fi
 }
 
-cd "$_SCRIPT_DIR"
+function main() {
+  cd "$_SCRIPT_DIR"
 
-check_git_default_branch
-check_git_dirty
-check_git_missing_commits
-clean_local
-store_versions
-publish_command
-tag_version
-next_version
+  check_git_default_branch
+  check_git_dirty
+  check_git_missing_commits
+  clean_local
+  store_versions
+  display_info_and_confirm
+  if ! check_next_only; then
+    publish_command
+    tag_version
+  fi
+  next_version
+}
+##################################################################################################################################################
+
+#################################################################### CUSTOM ######################################################################
+MAIN_REPOSITORY='pypi'
+TEST_REPOSITORY='pypitest'
+REPOSITORY="$MAIN_REPOSITORY"
+if check_test; then
+  REPOSITORY="$TEST_REPOSITORY"
+fi
+
+function __custom_clean_local() {
+  git clean -Xd --force -- build dist
+}
+
+function __custom_store_versions() {
+  VERSION_FILE="VERSION"
+  CURR_VERS="$(sed -E 's/ *$//g' "$VERSION_FILE" | sed -E 's/^ *//g')"
+  if test -z "${NEXT_VERS-}"; then
+    if ! NEXT_VERS="$(increment_semver "--${vers_bump_type}" 1 --reset-all "$CURR_VERS")"; then
+      echo "Failed to create NEXT_VERS"
+      exiting
+    fi
+  fi
+  export VERSION_FILE CURR_VERS NEXT_VERS
+}
+
+function __custom_publish() {
+  if check_debug; then
+    echo python setup.py sdist bdist_wheel
+    echo python -m twine upload --repository "$REPOSITORY" dist/*
+  else
+    python setup.py sdist bdist_wheel
+    python -m twine upload --repository "$REPOSITORY" dist/*
+  fi
+  __custom_clean_local
+}
+
+function __custom_next_version_bump() {
+  if check_debug; then
+    echo echo -n "${NEXT_VERS}" '>' "$VERSION_FILE"
+  else
+    echo -n "${NEXT_VERS}" > "$VERSION_FILE"
+  fi
+}
+##################################################################################################################################################
+
+main

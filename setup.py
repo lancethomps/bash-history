@@ -89,7 +89,15 @@ setup(
   python_requires='>=3.6',
   packages=['bash_history', 'bash_historytests'],
   install_requires=requirements,
-  classifiers=[],
+  classifiers=[
+    'Intended Audience :: Developers',
+    'Environment :: Console',
+    'Topic :: System :: Logging',
+    'Topic :: System :: Shells',
+    'Topic :: Utilities',
+    'License :: OSI Approved :: MIT License',
+    'Programming Language :: Python :: 3 :: Only'
+  ],
   cmdclass={
     'test': PyTest,
   },

@@ -7,7 +7,7 @@ from bash_history.configs import BashHistoryColorArgs, BashHistoryConfig, BashHi
 from bash_history.db_commands import select_commands
 from bash_history.output import ask_user_to_select_command, create_results_output
 from bash_history.utils import try_import_argcomplete
-from ltpylib import opts
+from ltpylib import macos, opts
 
 
 class ScriptArgs(BashHistoryColorArgs, BashHistoryPagerArgs, BashHistorySelectArgs):
@@ -30,12 +30,9 @@ def main():
     exit(1)
 
   output_lines = create_results_output(config, args, results, column_max_lengths)
-
-  if args.no_pager:
-    print("\n".join(output_lines))
-  else:
-    selected_commands = ask_user_to_select_command(results, output_lines)
-    print("\n".join(selected_commands))
+  selected_commands = ask_user_to_select_command(results, output_lines)
+  macos.pbcopy("\n".join(selected_commands))
+  print("Copied!")
 
 
 def _parse_args(config: BashHistoryConfig) -> ScriptArgs:

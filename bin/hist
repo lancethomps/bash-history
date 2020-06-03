@@ -24,6 +24,7 @@ class ScriptArgs(BashHistoryColorArgs, BashHistoryPagerArgs, BashHistorySelectAr
 def main():
   config = get_or_load_config()
   args = _parse_args(config)
+  args.pattern = None
   results, column_max_lengths = select_commands(args, use_command_line=True)
 
   if not results:
@@ -46,7 +47,7 @@ def _parse_args(config: BashHistoryConfig) -> ScriptArgs:
   BashHistoryColorArgs.add_arguments_to_parser(arg_parser)
   BashHistoryPagerArgs.add_arguments_to_parser(arg_parser, config)
 
-  BashHistorySelectArgs.add_arguments_to_parser(arg_parser, config)
+  BashHistorySelectArgs.add_arguments_to_parser(arg_parser, config, with_pattern_positional=False)
 
   try_import_argcomplete(arg_parser)
   return ScriptArgs(opts.parse_args_and_init_others(arg_parser))

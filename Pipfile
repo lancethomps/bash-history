@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple/"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+codecov = "*"
+docutils = "*"
+flake8 = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+pytest-xdist = "*"
+readme-renderer = "*"
+tox = "*"
+yapf = "*"
+
+[packages]
+bashhistory = {path = ".", editable = true}

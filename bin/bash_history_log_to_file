@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+################################################################### SETUP ########################################################################
+set -o errexit -o errtrace -o nounset
+##################################################################################################################################################
+
+BASH_HIST_LOGS="${BASH_HIST_LOGS:-$HOME/.logs/bash_history}"
+
+################################################################# SCRIPTARGS #####################################################################
+while test $# -gt 0; do
+  case "$1" in
+    -h | --help)
+      _usage
+      exit 0
+      ;;
+    --verbose)
+      export verbose=true
+      shift
+      ;;
+    --add-to-db)
+      add_to_db=true
+      shift
+      ;;
+    --ignore-missing-db)
+      ignore_missing_db=true
+      shift
+      ;;
+    --command)
+      shift
+      command="$1"
+      shift
+      ;;
+    --exit-code)
+      shift
+      exit_code="$1"
+      shift
+      ;;
+    --pid)
+      shift
+      pid="$1"
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "Unknown option: $1"
+      _usage
+      exit 1
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+##################################################################################################################################################
+
+command_part="$(echo "$command" | python -c 'import sys, re; print(re.match(r"^\s+\d+ {2}(.*?)$", sys.stdin.read()).group(1))')"
+if [[ ${command_part} == " "* ]]; then
+  if test "${verbose-}" = "true"; then
+    echo "Skipping command starting with space: '${command_part}'"
+  fi
+  exit 0
+fi
+
+function get_at() {
+  python -c "from datetime import datetime;import sys;sys.stdout.write(datetime.utcnow().strftime(\"%Y-%m-%d %H:%M:%S.%f\")[:-3]);"
+}
+function get_pwd_prefix() {
+  if test "$(id -u)" -eq 0; then
+    echo 'root@'
+  else
+    return 0
+  fi
+}
+
+tab_char=$'\t'
+echo "$(get_at)${tab_char}$(get_pwd_prefix)$(pwd)${tab_char} ${command_part}" >> "${BASH_HIST_LOGS}/bash-history_$(date "+%Y-%m-%d")_$(hostname).log"
+
+if test "${add_to_db-}" = "true"; then
+  if ! command -v hist_db_insert > /dev/null 2>&1; then
+    if test "${ignore_missing_db-}" = "true"; then
+      exit 0
+    fi
+    echo "No hist_db_insert command found, but --add-to-db set"
+    exit 1
+  fi
+  hist_db_insert_args=(
+    --command "${command}"
+    --exit-code "${exit_code-}"
+    --pid "${pid-}"
+  )
+  hist_db_insert "${hist_db_insert_args[@]}"
+else
+  exit 0
+fi

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+################################################################### SETUP ########################################################################
+S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done
+_SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
+set -o errexit -o errtrace -o nounset
+shopt -s expand_aliases
+##################################################################################################################################################
+
+CONSOLE_SCRIPTS=(
+  hist
+  hist_db_create
+  hist_db_insert
+  hist_grep
+  hist_grep_copy
+  hist_grep_exec
+)
+
+if test "$(uname)" = "Darwin"; then
+  if command -v gsed > /dev/null 2>&1; then
+    alias sed_ext_in_place='gsed -i -r'
+  else
+    alias sed_ext_in_place='/usr/bin/sed -i "" -E'
+  fi
+else
+  alias sed_ext_in_place='sed -r -i'
+fi
+
+function install_pip() {
+  pip uninstall --yes bashhistory || true
+  pip install --editable "$_SCRIPT_DIR"
+}
+
+function fix_pyenv_console_script_shims() {
+  local console_script script_bin_file
+  console_script="$1"
+  script_bin_file="$(pyenv which "$console_script")"
+
+  if ! grep -q "from pkg_resources import load_entry_point" "$script_bin_file"; then
+    echo "console_script bin file appears to be using a direct import, not modifying: ${console_script}"
+    return 0
+  fi
+
+  echo "Modifying console_script bin file to use a direct import: ${console_script} at $script_bin_file"
+  sed_ext_in_place 's/from pkg_resources import load_entry_point/from bashhistory.cli import '"$console_script"'/g' "$script_bin_file"
+  sed_ext_in_place 's/load_entry_point.*/'"$console_script"'()/g' "$script_bin_file"
+}
+
+install_pip
+
+if command -v pyenv > /dev/null 2>&1 && pyenv which hist > /dev/null 2>&1; then
+  for console_script in "${CONSOLE_SCRIPTS[@]}"; do
+    fix_pyenv_console_script_shims "$console_script"
+  done
+fi
+
+exit 0

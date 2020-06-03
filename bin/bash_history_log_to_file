@@ -55,7 +55,7 @@ while test $# -gt 0; do
 done
 ##################################################################################################################################################
 
-command_part="$(echo "$command" | pcregrep -o1 '^\s+\d+ {2}(.*?)$')"
+command_part="$(echo "$command" | python -c 'import sys, re; print(re.match(r"^\s+\d+ {2}(.*?)$", sys.stdin.read()).group(1))')"
 if [[ ${command_part} == " "* ]]; then
   if test "${verbose-}" = "true"; then
     echo "Skipping command starting with space: '${command_part}'"

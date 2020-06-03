@@ -26,6 +26,7 @@ else
 fi
 
 function install_pip() {
+  pip uninstall --yes bashhistory || true
   pip install --editable "$_SCRIPT_DIR"
 }
 

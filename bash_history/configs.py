@@ -137,7 +137,7 @@ class BashHistorySelectArgs(object):
     arg_parser.add_argument("--limit", "-l", type=int, default=config.limit)
     arg_parser.add_argument("--limit-order", default=config.limit_order)
     arg_parser.add_argument("--unique", "-u", action="store_true")
-    
+
     arg_parser.add_argument("--dir", "-d", action="append")
     arg_parser.add_argument("--dir-regex", "-dr")
     arg_parser.add_argument("--exit-code", action="append", type=int)
@@ -153,7 +153,7 @@ class BashHistorySelectArgs(object):
       arg_parser.add_argument("--pattern-exact", "-exact", action="store_true")
       arg_parser.add_argument("--pattern-sql", "-sql", action="store_true")
       arg_parser.add_argument('pattern')
-      
+
     return arg_parser
 
 

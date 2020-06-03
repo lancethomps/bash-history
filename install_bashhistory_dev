@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 ################################################################### SETUP ########################################################################
-S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done; _SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
+S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done
+_SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
 set -o errexit -o errtrace -o nounset
 shopt -s expand_aliases
 ##################################################################################################################################################
@@ -38,6 +39,7 @@ function fix_pyenv_console_script_shims() {
     return 0
   fi
 
+  echo "Modifying console_script bin file to use a direct import: ${console_script} at $script_bin_file"
   sed_ext_in_place 's/from pkg_resources import load_entry_point/from bashhistory.cli import '"$console_script"'/g' "$script_bin_file"
   sed_ext_in_place 's/load_entry_point.*/'"$console_script"'()/g' "$script_bin_file"
 }

@@ -59,6 +59,9 @@ def include_script_file(bin_file: Path) -> bool:
 
 bin_dir = Path("./bin")
 script_files = sorted([bin_file.relative_to(bin_dir.parent).as_posix() for bin_file in bin_dir.glob("*") if include_script_file(bin_file)])
+if script_files:
+  print("scripts config no longer used, fix these script files to use console_scripts: %s" % script_files)
+  exit(1)
 
 test_requirements = [
   'pytest-cov',
@@ -102,13 +105,14 @@ setup(
     'test': PyTest,
   },
   tests_require=test_requirements,
-  scripts=script_files,
   entry_points={
     "console_scripts": [
-      "hist = bashhistory.hist:hist",
-      "hist_grep = bashhistory.hist:hist_grep",
-      "hist_grep_copy = bashhistory.hist:hist_grep_copy",
-      "hist_grep_exec = bashhistory.hist:hist_grep_exec",
+      "hist = bashhistory.cli:hist",
+      "hist_db_create = bashhistory.cli:hist_db_create",
+      "hist_db_insert = bashhistory.cli:hist_db_insert",
+      "hist_grep = bashhistory.cli:hist_grep",
+      "hist_grep_copy = bashhistory.cli:hist_grep_copy",
+      "hist_grep_exec = bashhistory.cli:hist_grep_exec",
     ]
   },
 )

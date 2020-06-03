@@ -50,6 +50,17 @@ class BashHistoryConfig(object):
         self.column_colors[column] = getattr(Term, color_name.upper())
 
 
+class BashHistoryBaseArgs(object):
+
+  def __init__(self, args: argparse.Namespace):
+    self.verbose: bool = args.verbose
+
+  @staticmethod
+  def add_arguments_to_parser(arg_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    arg_parser.add_argument("--verbose", action="store_true")
+    return arg_parser
+
+
 class BashHistoryColorArgs(object):
 
   def __init__(self, args: argparse.Namespace):

@@ -1,14 +1,8 @@
 #!/usr/bin/env python
+# skip=true
 
-from bashhistory.db_commands import create_db
+from bashhistory.cli import hist_db_create
 
 
 def main():
-  create_db()
-
-
-if __name__ == '__main__':
-  try:
-    main()
-  except KeyboardInterrupt:
-    exit(130)
+  hist_db_create()

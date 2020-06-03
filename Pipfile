@@ -16,4 +16,4 @@ tox = "*"
 yapf = "*"
 
 [packages]
-bash_history = {path = ".", editable = true}
+bashhistory = {path = ".", editable = true}

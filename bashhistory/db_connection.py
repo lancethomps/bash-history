@@ -2,7 +2,7 @@
 import os
 import sqlite3
 
-from bash_history import db_commands
+from bashhistory import db_commands
 
 
 def connect(

@@ -5,10 +5,10 @@ import argparse
 import logging
 from typing import List, Tuple
 
-from bash_history.configs import BashHistoryColorArgs, BashHistoryConfig, BashHistoryPagerArgs, BashHistorySelectArgs, get_or_load_config
-from bash_history.db_commands import select_commands
-from bash_history.output import ask_user_to_select_command, create_results_output
-from bash_history.utils import try_import_argcomplete
+from bashhistory.configs import BashHistoryColorArgs, BashHistoryConfig, BashHistoryPagerArgs, BashHistorySelectArgs, get_or_load_config
+from bashhistory.db_commands import select_commands
+from bashhistory.output import ask_user_to_select_command, create_results_output
+from bashhistory.utils import try_import_argcomplete
 from ltpylib import logs, macos, opts, procs
 
 

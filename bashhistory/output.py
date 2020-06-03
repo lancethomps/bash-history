@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 from typing import Dict, List, Union
 
-from bash_history.configs import BashHistoryColorArgs, BashHistoryConfig, BashHistoryPagerArgs, BashHistorySelectArgs
-from bash_history.utils import Term
+from bashhistory.configs import BashHistoryColorArgs, BashHistoryConfig, BashHistoryPagerArgs, BashHistorySelectArgs
+from bashhistory.utils import Term
 from ltpylib.inputs import select_prompt
 
 

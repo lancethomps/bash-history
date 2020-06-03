@@ -2,7 +2,7 @@
 # skip=true
 # PYTHON_ARGCOMPLETE_OK
 
-from bash_history.hist import hist_grep_copy
+from bashhistory.hist import hist_grep_copy
 
 
 def main():

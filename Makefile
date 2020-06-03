@@ -9,26 +9,26 @@ check-scripts:
 	shellcheck --source-path "$(dir $(realpath $(firstword $(MAKEFILE_LIST))))" $(BASH_SCRIPTS)
 
 format-python:
-	pipenv run yapf --in-place --parallel --recursive --verbose bash_history bash_historytests setup.py
+	pipenv run yapf --in-place --parallel --recursive --verbose bashhistory bashhistorytests setup.py
 
 coverage:
-	pipenv run pytest --verbose --cov=bash_history --cov-report=xml --junit-xml=report.xml
+	pipenv run pytest --verbose --cov=bashhistory --cov-report=xml --junit-xml=report.xml
 
 lint-flake8:
 	pipenv run flake8
 
 lint-python-style:
 	# Fail if yapf formatter needs to reformat code
-	pipenv run yapf --diff --recursive bash_history bash_historytests setup.py
+	pipenv run yapf --diff --recursive bashhistory bashhistorytests setup.py
 
 lint: lint-flake8 lint-python-style
 
 test:
-	pipenv run pytest --cov=bash_history
+	pipenv run pytest --cov=bashhistory
 
 tests:
 	pipenv run tox
 
 ci: lint check-scripts
-	pipenv run pytest -n 8 --boxed --cov=bash_history --cov-report=xml --junit-xml=report.xml
+	pipenv run pytest -n 8 --boxed --cov=bashhistory --cov-report=xml --junit-xml=report.xml
 

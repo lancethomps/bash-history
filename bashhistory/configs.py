@@ -6,7 +6,7 @@ from getpass import getuser
 from pathlib import Path
 from typing import Dict, List, Union
 
-from bash_history.utils import Term
+from bashhistory.utils import Term
 
 
 class BashHistoryConfig(object):
@@ -169,4 +169,4 @@ def get_or_load_config():
 
 
 def get_config_file():
-  return os.getenv("BASH_HISTORY_CONFIG", os.path.expanduser("~/.config/bash-history/bash-history.conf"))
+  return os.getenv("BASH_HISTORY_CONFIG", os.path.expanduser("~/.config/bashhistory/bashhistory.conf"))

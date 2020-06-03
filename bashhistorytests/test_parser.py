@@ -3,7 +3,7 @@ from typing import Tuple, Union
 
 import pytest
 
-from bash_history import parser
+from bashhistory import parser
 
 
 @pytest.mark.parametrize("history,expected", [

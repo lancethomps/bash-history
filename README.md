@@ -1,3 +1,3 @@
 # Custom Bash History
 
-[![Build Status](https://travis-ci.org/lancethomps/bash-history.svg?branch=master)](https://travis-ci.org/lancethomps/bash-history)
+[![Build Status](https://travis-ci.org/lancethomps/bashhistory.svg?branch=master)](https://travis-ci.org/lancethomps/bashhistory)

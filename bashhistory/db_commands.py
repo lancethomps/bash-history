@@ -6,10 +6,10 @@ from datetime import datetime
 from getpass import getuser
 from typing import Dict, List, Tuple
 
-from bash_history import db_connection
-from bash_history.configs import BashHistorySelectArgs
-from bash_history.query_creator import create_sql, query_builder
-from bash_history.utils import filter_for_unique_commands, log_sql_callback
+from bashhistory import db_connection
+from bashhistory.configs import BashHistorySelectArgs
+from bashhistory.query_creator import create_sql, query_builder
+from bashhistory.utils import filter_for_unique_commands, log_sql_callback
 from ltpylib import procs
 
 

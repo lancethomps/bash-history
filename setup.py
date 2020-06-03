@@ -68,15 +68,15 @@ test_requirements = [
 ]
 
 setup(
-  name='bash-history',
+  name='bashhistory',
   version=version,
   description='Common Python helper functions',
   long_description=long_description,
   long_description_content_type='text/markdown',
-  url='https://github.com/lancethomps/bash-history',
+  url='https://github.com/lancethomps/bashhistory',
   project_urls={
-    'Bug Reports': 'https://github.com/lancethomps/bash-history/issues',
-    'Source': 'https://github.com/lancethomps/bash-history',
+    'Bug Reports': 'https://github.com/lancethomps/bashhistory/issues',
+    'Source': 'https://github.com/lancethomps/bashhistory',
   },
   author='Lance Thompson',
   license='MIT',
@@ -87,7 +87,7 @@ setup(
     'utils',
   ],
   python_requires='>=3.6',
-  packages=['bash_history', 'bash_historytests'],
+  packages=['bashhistory', 'bashhistorytests'],
   install_requires=requirements,
   classifiers=[
     'Intended Audience :: Developers',
@@ -105,10 +105,10 @@ setup(
   scripts=script_files,
   entry_points={
     "console_scripts": [
-      "hist = bash_history.hist:hist",
-      "hist_grep = bash_history.hist:hist_grep",
-      "hist_grep_copy = bash_history.hist:hist_grep_copy",
-      "hist_grep_exec = bash_history.hist:hist_grep_exec",
+      "hist = bashhistory.hist:hist",
+      "hist_grep = bashhistory.hist:hist_grep",
+      "hist_grep_copy = bashhistory.hist:hist_grep_copy",
+      "hist_grep_exec = bashhistory.hist:hist_grep_exec",
     ]
   },
 )

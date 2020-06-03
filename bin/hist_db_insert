@@ -2,9 +2,9 @@
 # PYTHON_ARGCOMPLETE_OK
 import argparse
 
-from bash_history.db_commands import insert_command
-from bash_history.parser import parse_history, should_skip_command
-from bash_history.utils import try_import_argcomplete
+from bashhistory.db_commands import insert_command
+from bashhistory.parser import parse_history, should_skip_command
+from bashhistory.utils import try_import_argcomplete
 
 
 class ScriptArgs(object):

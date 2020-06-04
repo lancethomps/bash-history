@@ -6,7 +6,7 @@ from getpass import getuser
 from pathlib import Path
 from typing import Dict, List, Union
 
-from bashhistory.utils import Term
+from bashhistory.bh_utils import Term
 from ltpylib.opts import PagerArgs, RegexCasingArgs
 
 

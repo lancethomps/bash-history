@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from typing import List, Tuple, Union
 
-from bashhistory.configs import SelectScriptArgs
+from bashhistory.bh_configs import SelectScriptArgs
 
 OP_REGEXP = "REGEXP"
 SELF_COMMANDS = [

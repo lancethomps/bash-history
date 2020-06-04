@@ -5,9 +5,9 @@ import sqlite3
 from typing import Dict, List, Tuple
 
 from bashhistory import db_connection
-from bashhistory.configs import BashHistoryConfig, get_or_load_config, SelectScriptArgs
+from bashhistory.bh_configs import BashHistoryConfig, get_or_load_config, SelectScriptArgs
 from bashhistory.query_creator import create_sql, query_builder
-from bashhistory.utils import can_use_sqlite_command_line, log_sql_callback
+from bashhistory.bh_utils import can_use_sqlite_command_line, log_sql_callback
 from ltpylib import procs
 
 

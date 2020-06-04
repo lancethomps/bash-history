@@ -5,8 +5,8 @@ import argparse
 import logging
 from typing import List, Tuple
 
-from bashhistory.configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistorySelectArgs, get_or_load_config, InsertScriptArgs, SelectScriptArgs
-from bashhistory.utils import try_import_argcomplete
+from bashhistory.bh_configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistorySelectArgs, get_or_load_config, InsertScriptArgs, SelectScriptArgs
+from bashhistory.bh_utils import try_import_argcomplete
 from ltpylib.opts import PagerArgs, parse_args_and_init_others, RegexCasingArgs
 
 
@@ -29,8 +29,8 @@ def hist_db_create():
 
 def hist_db_insert():
   try:
-    from bashhistory.parser import parse_history
-    from bashhistory.parser import should_skip_command
+    from bashhistory.bh_parser import parse_history
+    from bashhistory.bh_parser import should_skip_command
     from bashhistory.db_commands import insert_command
 
     args = _parse_insert_args()
@@ -95,7 +95,7 @@ def hist_grep_exec():
 
 
 def _query_db_and_select_commands() -> List[str]:
-  from bashhistory.output import ask_user_to_select_command, create_results_output
+  from bashhistory.bh_output import ask_user_to_select_command, create_results_output
   from bashhistory.query_runner import query_db
 
   config, args = _get_config_and_select_args()
@@ -109,7 +109,7 @@ def _query_db_and_select_commands() -> List[str]:
 
 
 def _query_db_and_output(with_pattern_positional: bool = True):
-  from bashhistory.output import ask_user_to_select_command, create_results_output
+  from bashhistory.bh_output import ask_user_to_select_command, create_results_output
   from bashhistory.query_runner import query_db
 
   config, args = _get_config_and_select_args(with_pattern_positional=with_pattern_positional)

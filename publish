@@ -20,7 +20,7 @@ NAME
 
 SYNOPSIS
        ${_SCRIPT_NAME} [--auto-confirm] [--bump-major] [--bump-minor] [--bump-patch] [--next-only] [--test] [--next-version <NEXT_VERS>]
-          [--help] [--debug] [--verbose]
+       ${SYN_IND}      [--help] [--debug] [--verbose]
 
 EXAMPLES
        ${_SCRIPT_NAME}

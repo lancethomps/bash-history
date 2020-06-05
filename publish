@@ -11,6 +11,9 @@ export vers_bump_type="minor"
 _SCRIPT_NAME="$(basename "$0")"
 
 function _usage() {
+  local SYN_IND
+  SYN_IND="$(head -c "$(($(echo -n "${_SCRIPT_NAME}" | wc -c) - 5))" < /dev/zero | tr '\0' " ")"
+
   cat << EOF
 NAME
        ${_SCRIPT_NAME}

@@ -142,7 +142,7 @@ class BashHistorySelectArgs(object):
     if with_pattern_positional:
       arg_parser.add_argument("--pattern-exact", "-exact", action="store_true")
       arg_parser.add_argument("--pattern-sql", "-sql", action="store_true")
-      arg_parser.add_argument('pattern')
+      arg_parser.add_argument("pattern", nargs="?")
 
     return arg_parser
 

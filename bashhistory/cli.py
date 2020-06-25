@@ -7,7 +7,7 @@ from typing import List, Tuple
 
 from bashhistory.bh_configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistorySelectArgs, get_or_load_config, InsertScriptArgs, SelectScriptArgs
 from bashhistory.bh_utils import try_import_argcomplete
-from ltpylib.opts import PagerArgs, parse_args_and_init_others, RegexCasingArgs
+from ltpylib.opts import PagerArgs, parse_args_and_init_others, parse_args_with_positionals_and_init_others, RegexCasingArgs
 
 
 def hist():
@@ -169,4 +169,10 @@ def _parse_select_args(config: BashHistoryConfig, with_pattern_positional: bool)
   BashHistorySelectArgs.add_arguments_to_parser(arg_parser, config, with_pattern_positional=with_pattern_positional)
 
   try_import_argcomplete(arg_parser)
-  return SelectScriptArgs(parse_args_and_init_others(arg_parser))
+
+  if with_pattern_positional:
+    parsed_args = parse_args_with_positionals_and_init_others(arg_parser, positionals_key="pattern")
+  else:
+    parsed_args = parse_args_and_init_others(arg_parser)
+
+  return SelectScriptArgs(parsed_args)

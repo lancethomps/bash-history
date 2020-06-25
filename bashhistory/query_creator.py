@@ -102,14 +102,17 @@ def query_builder(args: SelectScriptArgs, use_command_line: bool = False) -> Tup
     select_columns = ", ".join(args.columns)
 
   sql = """
-    SELECT %s
-    FROM commands
-    WHERE %s
-    ORDER BY %s
-    LIMIT ?
+SELECT
+  %s
+FROM commands
+WHERE
+  %s
+ORDER BY
+  %s
+LIMIT ?
   """ % (
     select_columns,
-    " AND ".join(filters),
+    "\n  AND ".join(filters),
     args.limit_order,
   )
   params.append(args.limit)

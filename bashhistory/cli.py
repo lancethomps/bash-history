@@ -7,12 +7,19 @@ from typing import List, Tuple
 
 from bashhistory.bh_configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistorySelectArgs, get_or_load_config, InsertScriptArgs, SelectScriptArgs
 from bashhistory.bh_utils import try_import_argcomplete
-from ltpylib.opts import PagerArgs, parse_args_and_init_others, parse_args_with_positionals_and_init_others, RegexCasingArgs
+from ltpylib.logs import log_with_title_sep
+from ltpylib.opts import (
+  create_default_arg_parser,
+  log_args,
+  PagerArgs,
+  parse_args_and_init_others,
+  RegexCasingArgs,
+)
 
 
 def hist():
   try:
-    _query_db_and_output(with_pattern_positional=False)
+    _query_db_and_output(with_pattern=False)
   except KeyboardInterrupt:
     exit(130)
 
@@ -56,7 +63,7 @@ def hist_db_insert():
 
 def hist_grep():
   try:
-    _query_db_and_output(with_pattern_positional=True)
+    _query_db_and_output(with_pattern=True)
   except KeyboardInterrupt:
     exit(130)
 
@@ -94,11 +101,14 @@ def hist_grep_exec():
     exit(130)
 
 
-def _query_db_and_select_commands() -> List[str]:
+def _query_db_and_select_commands(
+  with_pattern: bool = True,
+  require_pattern: bool = BashHistorySelectArgs.DEFAULT_REQUIRE_PATTERN,
+) -> List[str]:
   from bashhistory.bh_output import ask_user_to_select_command, create_results_output
   from bashhistory.query_runner import query_db
 
-  config, args = _get_config_and_select_args()
+  config, args = _get_config_and_select_args(with_pattern=with_pattern, require_pattern=require_pattern)
   results, column_max_lengths = query_db(args, config=config, use_command_line=True)
 
   if not results:
@@ -108,13 +118,16 @@ def _query_db_and_select_commands() -> List[str]:
   return ask_user_to_select_command(results, output_lines)
 
 
-def _query_db_and_output(with_pattern_positional: bool = True):
+def _query_db_and_output(
+  with_pattern: bool = True,
+  require_pattern: bool = BashHistorySelectArgs.DEFAULT_REQUIRE_PATTERN,
+):
   from bashhistory.bh_output import ask_user_to_select_command, create_results_output
   from bashhistory.query_runner import query_db
 
-  config, args = _get_config_and_select_args(with_pattern_positional=with_pattern_positional)
+  config, args = _get_config_and_select_args(with_pattern=with_pattern, require_pattern=require_pattern)
 
-  if not with_pattern_positional:
+  if not with_pattern:
     args.pattern = None
 
   results, column_max_lengths = query_db(args, config=config, use_command_line=True)
@@ -131,26 +144,35 @@ def _query_db_and_output(with_pattern_positional: bool = True):
     print("\n".join(selected_commands))
 
 
-def _get_config_and_select_args(with_pattern_positional: bool = True) -> Tuple[BashHistoryConfig, SelectScriptArgs]:
+def _get_config_and_select_args(
+  with_pattern: bool = True,
+  require_pattern: bool = BashHistorySelectArgs.DEFAULT_REQUIRE_PATTERN,
+) -> Tuple[BashHistoryConfig, SelectScriptArgs]:
   config = get_or_load_config()
-  args = _parse_select_args(config, with_pattern_positional)
+  args = _parse_select_args(config, with_pattern, require_pattern)
+
+  if args.verbose:
+    log_with_title_sep(logging.INFO, "CONFIG", str(config.__dict__))
+    log_args(args, include_raw_args=True)
+
   return config, args
 
 
-def _create_arg_parser() -> argparse.ArgumentParser:
-  arg_parser = argparse.ArgumentParser()
+def _create_arg_parser(with_pattern: bool) -> argparse.ArgumentParser:
+  arg_parser = create_default_arg_parser()
+
   BashHistoryBaseArgs.add_arguments_to_parser(arg_parser)
   return arg_parser
 
 
 def _parse_db_create_args() -> BashHistoryBaseArgs:
-  arg_parser = _create_arg_parser()
+  arg_parser = _create_arg_parser(with_pattern=False)
   try_import_argcomplete(arg_parser)
   return InsertScriptArgs(parse_args_and_init_others(arg_parser))
 
 
 def _parse_insert_args() -> InsertScriptArgs:
-  arg_parser = _create_arg_parser()
+  arg_parser = _create_arg_parser(with_pattern=False)
 
   arg_parser.add_argument("--exit-code", "-e", help="set to $?", default=0, type=int)
   arg_parser.add_argument("--command", "-c", help="set to $(HISTTIMEFORMAT= history 1)", default="")
@@ -160,19 +182,15 @@ def _parse_insert_args() -> InsertScriptArgs:
   return InsertScriptArgs(parse_args_and_init_others(arg_parser))
 
 
-def _parse_select_args(config: BashHistoryConfig, with_pattern_positional: bool) -> SelectScriptArgs:
-  arg_parser = _create_arg_parser()
+def _parse_select_args(config: BashHistoryConfig, with_pattern: bool, require_pattern: bool) -> SelectScriptArgs:
+  arg_parser = _create_arg_parser(with_pattern=with_pattern)
 
   BashHistoryColorArgs.add_arguments_to_parser(arg_parser)
   PagerArgs.add_arguments_to_parser(arg_parser, default_pager=config.pager)
   RegexCasingArgs.add_arguments_to_parser(arg_parser)
-  BashHistorySelectArgs.add_arguments_to_parser(arg_parser, config, with_pattern_positional=with_pattern_positional)
+  BashHistorySelectArgs.add_arguments_to_parser(arg_parser, config, with_pattern=with_pattern, require_pattern=require_pattern)
 
   try_import_argcomplete(arg_parser)
 
-  if with_pattern_positional:
-    parsed_args = parse_args_with_positionals_and_init_others(arg_parser, positionals_key="pattern")
-  else:
-    parsed_args = parse_args_and_init_others(arg_parser)
-
+  parsed_args = parse_args_and_init_others(arg_parser)
   return SelectScriptArgs(parsed_args)

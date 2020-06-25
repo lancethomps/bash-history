@@ -60,7 +60,10 @@ def query_db(
 def query_via_command_line(config: BashHistoryConfig, args: SelectScriptArgs, query: str, params: List) -> List[dict]:
   results: List[dict] = []
   parsed_sql = create_sql(query, params)
-  logging.debug("SQL QUERY\n%s", parsed_sql)
+
+  logging.debug("SQL QUERY (sqlite3 CLI)\n%s", parsed_sql)
+  args.check_for_debug_and_exit()
+
   command_result = procs.run([
     "sqlite3",
     "-cmd",

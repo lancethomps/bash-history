@@ -2,7 +2,7 @@
 from typing import Dict, List
 
 from bashhistory.bh_configs import BashHistoryColorArgs, BashHistoryConfig, SelectScriptArgs
-from bashhistory.bh_utils import Term
+from ltpylib.colors import TermColors
 from ltpylib.inputs import select_prompt
 
 
@@ -15,7 +15,7 @@ def colorize_result(config: BashHistoryConfig, args: BashHistoryColorArgs, colum
 
   color = config.column_colors.get(column)
   if color:
-    return color + str(value) + Term.ENDC
+    return color + str(value) + TermColors.ENDC
 
   return value
 

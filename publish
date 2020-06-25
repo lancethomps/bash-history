@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ################################################################### SETUP ########################################################################
-S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done && _SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
+S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done || true && _SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
 set -o errexit -o errtrace -o nounset
 # shellcheck disable=SC2155
 export GPG_TTY="$(tty)"
@@ -11,13 +11,16 @@ export vers_bump_type="minor"
 _SCRIPT_NAME="$(basename "$0")"
 
 function _usage() {
+  local SYNOP_INDENT
+  SYNOP_INDENT="$(head -c "$(echo -n "${_SCRIPT_NAME}" | wc -c)" < /dev/zero | tr '\0' " ")"
+
   cat << EOF
 NAME
        ${_SCRIPT_NAME}
 
 SYNOPSIS
        ${_SCRIPT_NAME} [--auto-confirm] [--bump-major] [--bump-minor] [--bump-patch] [--next-only] [--test] [--next-version <NEXT_VERS>]
-          [--help] [--debug] [--verbose]
+       ${SYNOP_INDENT} [--help] [--debug] [--verbose]
 
 EXAMPLES
        ${_SCRIPT_NAME}

@@ -6,8 +6,8 @@ from getpass import getuser
 from pathlib import Path
 from typing import Dict, List, Union
 
-from bashhistory.utils import Term
-from ltpylib.opts import PagerArgs, RegexCasingArgs
+from ltpylib.colors import TermColors
+from ltpylib.opts import BaseArgs, PagerArgs, RegexCasingArgs
 
 
 class BashHistoryConfig(object):
@@ -35,7 +35,7 @@ class BashHistoryConfig(object):
     self.sqlite_regexp_loader = defaults.get("sqlite_regexp_loader")
 
     self.column_colors: Dict[str, str] = {
-      "at": Term.YELLOW,
+      "at": TermColors.YELLOW,
     }
     if "column_colors" in defaults:
       for mapping in defaults.get("column_colors").split(","):
@@ -45,20 +45,19 @@ class BashHistoryConfig(object):
           self.column_colors.pop(column)
           continue
 
-        if not hasattr(Term, color_name.upper()):
+        if not hasattr(TermColors, color_name.upper()):
           raise ValueError("column_colors config using invalid color: %s" % mapping)
 
-        self.column_colors[column] = getattr(Term, color_name.upper())
+        self.column_colors[column] = getattr(TermColors, color_name.upper())
 
 
-class BashHistoryBaseArgs(object):
+class BashHistoryBaseArgs(BaseArgs):
 
   def __init__(self, args: argparse.Namespace):
-    self.verbose: bool = args.verbose
+    super(BashHistoryBaseArgs, self).__init__(args)
 
   @staticmethod
   def add_arguments_to_parser(arg_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    arg_parser.add_argument("--verbose", action="store_true")
     return arg_parser
 
 
@@ -85,6 +84,7 @@ class BashHistoryColorArgs(object):
 
 
 class BashHistorySelectArgs(object):
+  DEFAULT_REQUIRE_PATTERN: bool = False
 
   def __init__(self, args: argparse.Namespace):
     self.columns: List[str] = args.columns.split(",")
@@ -121,7 +121,12 @@ class BashHistorySelectArgs(object):
       self.dir = [Path(filter_dir).as_posix() for filter_dir in self.dir]
 
   @staticmethod
-  def add_arguments_to_parser(arg_parser: argparse.ArgumentParser, config: BashHistoryConfig, with_pattern_positional: bool = True) -> argparse.ArgumentParser:
+  def add_arguments_to_parser(
+    arg_parser: argparse.ArgumentParser,
+    config: BashHistoryConfig,
+    with_pattern: bool = True,
+    require_pattern: bool = DEFAULT_REQUIRE_PATTERN,
+  ) -> argparse.ArgumentParser:
     arg_parser.add_argument("--columns", "-c", default=config.columns)
     arg_parser.add_argument("--limit", "-l", type=int, default=config.limit)
     arg_parser.add_argument("--limit-order", default=config.limit_order)
@@ -139,10 +144,15 @@ class BashHistorySelectArgs(object):
     arg_parser.add_argument("--return-self", action="store_true")
     arg_parser.add_argument("--root", action="store_true")
 
-    if with_pattern_positional:
+    if with_pattern:
       arg_parser.add_argument("--pattern-exact", "-exact", action="store_true")
       arg_parser.add_argument("--pattern-sql", "-sql", action="store_true")
-      arg_parser.add_argument('pattern')
+
+      pattern_arg_kw_args = {}
+      if not require_pattern:
+        pattern_arg_kw_args["nargs"] = "?"
+
+      arg_parser.add_argument("pattern", **pattern_arg_kw_args)
 
     return arg_parser
 

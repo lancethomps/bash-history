@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from typing import List, Tuple, Union
 
-from bashhistory.configs import SelectScriptArgs
+from bashhistory.bh_configs import SelectScriptArgs
 
 OP_REGEXP = "REGEXP"
 SELF_COMMANDS = [
@@ -102,14 +102,17 @@ def query_builder(args: SelectScriptArgs, use_command_line: bool = False) -> Tup
     select_columns = ", ".join(args.columns)
 
   sql = """
-    SELECT %s
-    FROM commands
-    WHERE %s
-    ORDER BY %s
-    LIMIT ?
+SELECT
+  %s
+FROM commands
+WHERE
+  %s
+ORDER BY
+  %s
+LIMIT ?
   """ % (
     select_columns,
-    " AND ".join(filters),
+    "\n  AND ".join(filters),
     args.limit_order,
   )
   params.append(args.limit)

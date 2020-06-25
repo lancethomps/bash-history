@@ -5,9 +5,9 @@ import sqlite3
 from typing import Dict, List, Tuple
 
 from bashhistory import db_connection
-from bashhistory.configs import BashHistoryConfig, get_or_load_config, SelectScriptArgs
+from bashhistory.bh_configs import BashHistoryConfig, get_or_load_config, SelectScriptArgs
 from bashhistory.query_creator import create_sql, query_builder
-from bashhistory.utils import can_use_sqlite_command_line, log_sql_callback
+from bashhistory.bh_utils import can_use_sqlite_command_line, log_sql_callback
 from ltpylib import procs
 
 
@@ -60,7 +60,10 @@ def query_db(
 def query_via_command_line(config: BashHistoryConfig, args: SelectScriptArgs, query: str, params: List) -> List[dict]:
   results: List[dict] = []
   parsed_sql = create_sql(query, params)
-  logging.debug("SQL QUERY\n%s", parsed_sql)
+
+  logging.debug("SQL QUERY (sqlite3 CLI)\n%s", parsed_sql)
+  args.check_for_debug_and_exit()
+
   command_result = procs.run([
     "sqlite3",
     "-cmd",

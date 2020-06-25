@@ -4,17 +4,6 @@ import shutil
 from pathlib import Path
 
 
-class Term:
-  HEADER = '\033[95m'
-  BLUE = '\033[94m'
-  GREEN = '\033[92m'
-  YELLOW = '\033[93m'
-  RED = '\033[91m'
-  BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
-  ENDC = '\033[0m'
-
-
 def can_use_sqlite_command_line(sqlite_regexp_loader: str) -> bool:
   if shutil.which("sqlite3") is None:
     logging.debug("CANNOT USE SQLITE COMMAND LINE. Could not find sqlite3 executable.")
@@ -32,7 +21,7 @@ def can_use_sqlite_command_line(sqlite_regexp_loader: str) -> bool:
 
 
 def log_sql_callback(query: str):
-  logging.debug("SQL QUERY\n%s", query)
+  logging.debug("SQL QUERY (Python)\n%s", query)
 
 
 def try_import_argcomplete(arg_parser):

@@ -87,7 +87,10 @@ class BashHistorySelectArgs(object):
   DEFAULT_REQUIRE_PATTERN: bool = False
 
   def __init__(self, args: argparse.Namespace):
+    self.add_columns: List[str] = args.add_columns.split(",") if args.add_columns else None
     self.columns: List[str] = args.columns.split(",")
+    if self.add_columns:
+      self.columns.extend(self.add_columns)
     self.limit: int = args.limit
     self.limit_order = args.limit_order
     self.unique: bool = args.unique
@@ -127,6 +130,7 @@ class BashHistorySelectArgs(object):
     with_pattern: bool = True,
     require_pattern: bool = DEFAULT_REQUIRE_PATTERN,
   ) -> argparse.ArgumentParser:
+    arg_parser.add_argument("--add-columns", "-ac")
     arg_parser.add_argument("--columns", "-c", default=config.columns)
     arg_parser.add_argument("--limit", "-l", type=int, default=config.limit)
     arg_parser.add_argument("--limit-order", default=config.limit_order)

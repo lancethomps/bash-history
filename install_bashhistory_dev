@@ -38,11 +38,11 @@ function fix_pyenv_console_script_shims() {
 
 install_pip
 
-if command -v pyenv > /dev/null 2>&1 && pyenv which hist > /dev/null 2>&1; then
-  mapfile -t CONSOLE_SCRIPTS < <(python -c 'import os; from ltpylib import configs; print("\n".join(configs.read_properties(os.getcwd() + "/bashhistory.egg-info/entry_points.txt", use_mock_default_section=False).options("console_scripts")))')
-  for console_script in "${CONSOLE_SCRIPTS[@]}"; do
-    fix_pyenv_console_script_shims "$console_script"
-  done
-fi
+#if command -v pyenv > /dev/null 2>&1 && pyenv which hist > /dev/null 2>&1; then
+#  mapfile -t CONSOLE_SCRIPTS < <(python -c 'import os; from ltpylib import configs; print("\n".join(configs.read_properties(os.getcwd() + "/bashhistory.egg-info/entry_points.txt", use_mock_default_section=False).options("console_scripts")))')
+#  for console_script in "${CONSOLE_SCRIPTS[@]}"; do
+#    fix_pyenv_console_script_shims "$console_script"
+#  done
+#fi
 
 exit 0

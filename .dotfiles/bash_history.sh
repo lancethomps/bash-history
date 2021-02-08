@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 ################################################################### SETUP ########################################################################
-S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done; _SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
+S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done
+_SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
 ##################################################################################################################################################
 
 ##################################################################################################################################################
@@ -58,16 +59,15 @@ fi
 ##################################################################################################################################################
 ################################################################# PROMPT SETUP ###################################################################
 ##################################################################################################################################################
+if test -z "${ORIG_PROMPT_COMMAND:-}"; then
+  export ORIG_PROMPT_COMMAND="${PROMPT_COMMAND:- }"
+else
+  export PROMPT_COMMAND="$ORIG_PROMPT_COMMAND"
+fi
 
 if test "${BASH_HIST_NO_WRITE:-}" = 'true'; then
   true
 elif test -w "$HOME"; then
-  if test -z "${ORIG_PROMPT_COMMAND:-}"; then
-    export ORIG_PROMPT_COMMAND="${PROMPT_COMMAND:- }"
-  else
-    export PROMPT_COMMAND="$ORIG_PROMPT_COMMAND"
-  fi
-
   if _bh_using_sqlite && test "${BASH_HIST_ADD_TO_DB}" != "true"; then
     # shellcheck disable=SC2016
     log_cmd='hist_db_insert --exit-code "$?" --pid "$$" --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)"'

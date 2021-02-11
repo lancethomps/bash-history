@@ -3,6 +3,7 @@
 
 import argparse
 import logging
+from pathlib import Path
 from typing import List, Tuple
 
 from bashhistory.bh_configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistorySelectArgs, get_or_load_config, InsertScriptArgs, SelectScriptArgs
@@ -193,4 +194,16 @@ def _parse_select_args(config: BashHistoryConfig, with_pattern: bool, require_pa
   try_import_argcomplete(arg_parser)
 
   parsed_args = parse_args_and_init_others(arg_parser)
-  return SelectScriptArgs(parsed_args)
+  args = SelectScriptArgs(parsed_args)
+
+  if args.pwd and config.other_home_paths:
+    home_dir = Path.home()
+    cwd = Path.cwd()
+    if cwd == home_dir or cwd.is_relative_to(home_dir):
+      cwd_rel = cwd.relative_to(home_dir)
+      for home_path in config.other_home_paths:
+        other_path = home_path.joinpath(cwd_rel).as_posix()
+        if other_path not in args.dir:
+          args.dir.append(other_path)
+
+  return args

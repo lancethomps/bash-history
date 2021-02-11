@@ -31,6 +31,7 @@ class BashHistoryConfig(object):
     self.columns = defaults.get("columns", "at,command")
     self.limit = int(defaults.get("limit", os.getenv("BASH_HIST_SELECT_LIMIT", "50")))
     self.limit_order = defaults.get("limit_order", "at DESC")
+    self.other_home_paths: List[Path] = [Path(val) for val in defaults.get("other_home_paths").split(",")] if "other_home_paths" in defaults else None
     self.pager = defaults.get("pager") if "pager" in defaults else os.getenv("BASH_HIST_PAGER", os.getenv("PAGER"))
     self.sqlite_regexp_loader = defaults.get("sqlite_regexp_loader")
 

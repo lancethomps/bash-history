@@ -1,5 +1,5 @@
 [style]
-based_on_style = pep8
+based_on_style=pep8
 
 # Align closing bracket with visual indentation.
 align_closing_bracket_with_visual_indent=False
@@ -86,14 +86,11 @@ column_limit=180
 #
 # - SPACE: Use spaces for continuation alignment. This is default behavior.
 # - FIXED: Use fixed number (CONTINUATION_INDENT_WIDTH) of columns
-#   (ie: CONTINUATION_INDENT_WIDTH/INDENT_WIDTH tabs) for continuation
-#   alignment.
-# - VALIGN-RIGHT: Vertically align continuation lines with indent
-#   characters. Slightly right (one more indent character) if cannot
-#   vertically align continuation lines with indent characters.
-#
-# For options FIXED, and VALIGN-RIGHT are only available when USE_TABS is
-# enabled.
+#   (ie: CONTINUATION_INDENT_WIDTH/INDENT_WIDTH tabs or
+#   CONTINUATION_INDENT_WIDTH spaces) for continuation alignment.
+# - VALIGN-RIGHT: Vertically align continuation lines to multiple of
+#   INDENT_WIDTH columns. Slightly right (one tab or a few spaces) if
+#   cannot vertically align continuation lines with indent characters.
 continuation_align_style=SPACE
 
 # Indent width used for line continuations.
@@ -123,6 +120,14 @@ disable_ending_comma_heuristic=False
 
 # Place each dictionary entry onto its own line.
 each_dict_entry_on_separate_line=True
+
+# Require multiline dictionary even if it would normally fit on one line.
+# For example:
+#
+#   config = {
+#       'key1': 'value1'
+#   }
+force_multiline_dict=False
 
 # The regex for an i18n comment. The presence of this comment stops
 # reformatting of that line, because the comments are required to be
@@ -184,8 +189,40 @@ no_spaces_around_selected_binary_operators=
 # Use spaces around default or named assigns.
 spaces_around_default_or_named_assign=False
 
+# Adds a space after the opening '{' and before the ending '}' dict delimiters.
+#
+#   {1: 2}
+#
+# will be formatted as:
+#
+#   { 1: 2 }
+spaces_around_dict_delimiters=False
+
+# Adds a space after the opening '[' and before the ending ']' list delimiters.
+#
+#   [1, 2]
+#
+# will be formatted as:
+#
+#   [ 1, 2 ]
+spaces_around_list_delimiters=False
+
 # Use spaces around the power operator.
 spaces_around_power_operator=False
+
+# Use spaces around the subscript / slice operator.  For example:
+#
+#   my_list[1 : 10 : 2]
+spaces_around_subscript_colon=False
+
+# Adds a space after the opening '(' and before the ending ')' tuple delimiters.
+#
+#   (1, 2, 3)
+#
+# will be formatted as:
+#
+#   ( 1, 2, 3 )
+spaces_around_tuple_delimiters=False
 
 # The number of spaces required before a trailing comment.
 # This can be a single value (representing the number of spaces
@@ -229,6 +266,13 @@ spaces_before_comment=2
 # Insert a space between the ending comma and closing bracket of a list,
 # etc.
 space_between_ending_comma_and_closing_bracket=False
+
+# Use spaces inside brackets, braces, and parentheses.  For example:
+#
+#   method_call( 1 )
+#   my_dict[ 3 ][ 1 ][ get_index( *args, **kwargs ) ]
+#   my_set = { 1, 2, 3 }
+space_inside_brackets=False
 
 # Split before arguments
 split_all_comma_separated_values=False

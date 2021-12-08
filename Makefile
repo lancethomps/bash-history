@@ -4,7 +4,7 @@ init:
 	pip install pipenv --upgrade
 	pipenv install --dev --skip-lock
 
-check-scripts:
+check-bash:
 	# Fail if any of these files have warnings
 	shellcheck --source-path "$(dir $(realpath $(firstword $(MAKEFILE_LIST))))" $(BASH_SCRIPTS)
 
@@ -29,6 +29,6 @@ test:
 tests:
 	pipenv run tox
 
-ci: lint check-scripts
+ci: lint check-bash
 	pipenv run pytest -n 8 --boxed --cov=bashhistory --cov-report=xml --junit-xml=report.xml
 

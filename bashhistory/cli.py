@@ -153,7 +153,7 @@ def _get_config_and_select_args(
   args = _parse_select_args(config, with_pattern, require_pattern)
 
   if args.verbose:
-    log_with_title_sep(logging.INFO, "CONFIG", str(config.__dict__))
+    log_with_title_sep("CONFIG", str(config.__dict__))
     log_args(args, include_raw_args=True)
 
   return config, args

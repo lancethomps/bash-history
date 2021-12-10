@@ -353,7 +353,7 @@ split_before_named_assigns=True
 split_complex_comprehension=True
 
 # The penalty for splitting right after the opening bracket.
-split_penalty_after_opening_bracket=30
+split_penalty_after_opening_bracket=0
 
 # The penalty for splitting the line after a unary operator.
 split_penalty_after_unary_operator=10000
@@ -378,7 +378,7 @@ split_penalty_excess_character=7000
 
 # The penalty incurred by adding a line split to the unwrapped line. The
 # more line splits added the higher the penalty.
-split_penalty_for_added_line_split=30
+split_penalty_for_added_line_split=0
 
 # The penalty of splitting a list of "import as" names. For example:
 #

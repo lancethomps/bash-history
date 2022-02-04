@@ -1,0 +1,30 @@
+init::
+	pip install pipenv --upgrade
+	pipenv install --dev --skip-lock
+
+debug::
+	pipenv graph
+
+format-python::
+	pipenv run yapf --in-place --parallel --recursive --verbose $(PY_PATHS) setup.py
+
+coverage::
+	pipenv run pytest --verbose --cov=$(PY_PACKAGE) --cov-report=xml --junit-xml=report.xml
+
+lint-flake8::
+	pipenv run flake8
+
+lint-python-style::
+	# Fail if yapf formatter needs to reformat code
+	pipenv run yapf --diff --recursive $(PY_PATHS) setup.py
+
+lint:: lint-flake8 lint-python-style
+
+test::
+	pipenv run pytest --cov=$(PY_PACKAGE)
+
+test-parallel::
+	pipenv run pytest -n 8 --boxed --cov=$(PY_PACKAGE) --cov-report=xml --junit-xml=report.xml
+
+test-tox::
+	pipenv run tox

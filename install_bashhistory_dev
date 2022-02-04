@@ -7,7 +7,7 @@ shopt -s expand_aliases
 ##################################################################################################################################################
 
 if test "$(uname)" = "Darwin"; then
-  if command -v gsed > /dev/null 2>&1; then
+  if command -v gsed >/dev/null 2>&1; then
     alias sed_ext_in_place='gsed -i -r'
   else
     alias sed_ext_in_place='/usr/bin/sed -i "" -E'

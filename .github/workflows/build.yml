@@ -1,0 +1,44 @@
+name: Build
+on: [ push ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.8", "3.9", "3.10" ]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Setup PATH
+      shell: bash
+      run: |
+        if ! test -d "$HOME/.local/bin"; then
+          mkdir -pv "$HOME/.local/bin"
+        fi
+        echo "$HOME/.local/bin" >>"$GITHUB_PATH"
+    - name: Download shellcheck
+      shell: bash
+      run: |
+        if [[ "${{ runner.os }}" == "macOS" ]]; then
+          brew install shellcheck
+          exit 0
+        fi
+        scversion="stable"
+        baseurl="https://github.com/koalaman/shellcheck/releases/download"
+        curl -Lso "${{ runner.temp }}/sc.tar.xz" "${baseurl}/${scversion}/shellcheck-${scversion}.linux.x86_64.tar.xz"
+        tar -xf "${{ runner.temp }}/sc.tar.xz" -C "${{ runner.temp }}"
+        mv -v "${{ runner.temp }}/shellcheck-${scversion}/shellcheck" "$HOME/.local/bin"
+        shellcheck --version
+    - run: make init
+    - run: make ci
+
+  debug:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+    - uses: actions/checkout@v2
+    - run: make --ignore-errors debug

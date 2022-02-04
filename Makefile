@@ -4,6 +4,10 @@ init:
 	pip install pipenv --upgrade
 	pipenv install --dev --skip-lock
 
+debug:
+	pipenv graph
+	shellcheck --version
+
 check-bash:
 	# Fail if any of these files have warnings
 	shellcheck --source-path "$(dir $(realpath $(firstword $(MAKEFILE_LIST))))" $(BASH_SCRIPTS)

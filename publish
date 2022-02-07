@@ -103,7 +103,7 @@ function get_sep_cols() {
   fi
   echo -n "$sep_cols"
 }
-function echo_sep() {
+function log_sep() {
   if test -z "${TERMINAL_SEP:-}"; then
     local rep_count
     rep_count=$(get_sep_cols 2)
@@ -112,10 +112,10 @@ function echo_sep() {
   fi
   echo "$TERMINAL_SEP"
 }
-function echo_with_sep() {
-  echo_sep
+function log_with_sep_around() {
+  log_sep
   echo "$@"
-  echo_sep
+  log_sep
 }
 function check_debug() {
   check_true "${debug_mode:-}"
@@ -352,14 +352,14 @@ function display_info_and_confirm() {
     NEXT_VERS "$NEXT_VERS"
   )
 
-  echo_sep
+  log_sep
 
   while test "${#display_infos[@]}" -gt 0; do
     printf "%-50s -> %s\n" "${display_infos[0]}" "${display_infos[1]}"
     display_infos=("${display_infos[@]:2}")
   done
 
-  echo_sep
+  log_sep
 
   if ! confirm_with_auto "Continue with publish?"; then
     exiting 1

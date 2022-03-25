@@ -1,3 +1,5 @@
+include Makefile.common
+
 PY_PACKAGE := bashhistory
 PY_PATHS := $(PY_PACKAGE) $(PY_PACKAGE)tests
 

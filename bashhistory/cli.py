@@ -4,7 +4,7 @@
 import argparse
 import logging
 from pathlib import Path
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from bashhistory.bh_configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistorySelectArgs, get_or_load_config, InsertScriptArgs, SelectScriptArgs
 from bashhistory.bh_utils import try_import_argcomplete
@@ -73,7 +73,7 @@ def hist_grep_copy():
   try:
     from ltpylib import macos
 
-    selected_commands = _query_db_and_select_commands()
+    selected_commands = _query_db_and_select_commands(default_args={"unique": True})
     print("\n".join(selected_commands))
     macos.pbcopy("\n".join(selected_commands))
     logging.info("Copied!")
@@ -105,11 +105,12 @@ def hist_grep_exec():
 def _query_db_and_select_commands(
   with_pattern: bool = True,
   require_pattern: bool = BashHistorySelectArgs.DEFAULT_REQUIRE_PATTERN,
+  default_args: Dict[str, Any] = None,
 ) -> List[str]:
   from bashhistory.bh_output import ask_user_to_select_command, create_results_output
   from bashhistory.query_runner import query_db
 
-  config, args = _get_config_and_select_args(with_pattern=with_pattern, require_pattern=require_pattern)
+  config, args = _get_config_and_select_args(with_pattern=with_pattern, require_pattern=require_pattern, default_args=default_args)
   results, column_max_lengths = query_db(args, config=config, use_command_line=True)
 
   if not results:
@@ -122,11 +123,12 @@ def _query_db_and_select_commands(
 def _query_db_and_output(
   with_pattern: bool = True,
   require_pattern: bool = BashHistorySelectArgs.DEFAULT_REQUIRE_PATTERN,
+  default_args: Dict[str, Any] = None,
 ):
   from bashhistory.bh_output import ask_user_to_select_command, create_results_output
   from bashhistory.query_runner import query_db
 
-  config, args = _get_config_and_select_args(with_pattern=with_pattern, require_pattern=require_pattern)
+  config, args = _get_config_and_select_args(with_pattern=with_pattern, require_pattern=require_pattern, default_args=default_args)
 
   if not with_pattern:
     args.pattern = None
@@ -148,9 +150,15 @@ def _query_db_and_output(
 def _get_config_and_select_args(
   with_pattern: bool = True,
   require_pattern: bool = BashHistorySelectArgs.DEFAULT_REQUIRE_PATTERN,
+  default_args: Dict[str, Any] = None,
 ) -> Tuple[BashHistoryConfig, SelectScriptArgs]:
   config = get_or_load_config()
   args = _parse_select_args(config, with_pattern, require_pattern)
+
+  if default_args:
+    for key, val in default_args.items():
+      if hasattr(args, key) and getattr(args, key) is None:
+        setattr(args, key, val)
 
   if args.verbose:
     log_with_title_sep("CONFIG", str(config.__dict__))

@@ -54,6 +54,7 @@ def ask_user_to_select_command(results: List[dict], output_lines: List[str]) -> 
     layout="reverse",
     multi=True,
     ansi=True,
+    include_select_all_bind=True,
   ).splitlines(keepends=False)
 
   for selection in selections:

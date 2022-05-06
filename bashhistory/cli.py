@@ -20,7 +20,7 @@ from ltpylib.opts import (
 
 def hist():
   try:
-    _query_db_and_output(with_pattern=False)
+    _query_db_and_output(with_pattern=False, default_args={"return_self": True})
   except KeyboardInterrupt:
     exit(130)
 

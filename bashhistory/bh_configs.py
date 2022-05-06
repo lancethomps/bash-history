@@ -146,7 +146,7 @@ class BashHistorySelectArgs(object):
 
     arg_parser.add_argument("--me", action="store_true")
     arg_parser.add_argument("--pwd", "-p", action="store_true")
-    arg_parser.add_argument("--return-self", action="store_true")
+    arg_parser.add_argument("--return-self", action=argparse.BooleanOptionalAction)
     arg_parser.add_argument("--root", action="store_true")
 
     if with_pattern:

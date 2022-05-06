@@ -74,7 +74,7 @@ def query_builder(args: SelectScriptArgs, use_command_line: bool = False) -> Tup
   add_filter_if_valid(filters, params, "pwd", args.dir_regex, sql_operator=OP_REGEXP)
   add_filter_if_valid(filters, params, "user", args.user)
   if not args.return_self:
-    add_filter_if_valid(filters, params, "command", "^(%s)($| )" % "|".join(SELF_COMMANDS), sql_operator=("NOT " + OP_REGEXP))
+    add_filter_if_valid(filters, params, "command", "^(%s)(\\$| )" % "|".join(SELF_COMMANDS), sql_operator=("NOT " + OP_REGEXP))
 
   if args.pattern:
     pattern = args.pattern

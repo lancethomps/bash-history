@@ -13,7 +13,7 @@ fi
 
 # NB: the first regex removes colors from the output (https://stackoverflow.com/questions/17998978/removing-colors-from-output)
 py_code=$(
-  cat << EOF
+  cat <<EOF
 import re, sys
 output = []
 for val in sys.stdin.read().splitlines(keepends=False):

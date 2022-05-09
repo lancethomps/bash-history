@@ -1,16 +1,14 @@
 [flake8]
-max-line-length=180
-
+max-line-length = 200
+exclude = .svn,CVS,.bzr,.hg,.git,__pycache__,.tox,.nox,.eggs,*.egg,build,dist
 ignore =
-    # indentation is not a multiple of four,
-    E111,E114,
-    # continuation line under-indented for hanging indent
-    E121,
-    # closing bracket does not match visual indentation
-    E124,
-    # visually indented line with same indent as next logical line,
-    E129,
-    # whitespace before ':'
-    E203
-
-per-file-ignores=
+  # indentation is not a multiple of four,
+  E111,E114,
+  # continuation line under-indented for hanging indent
+  E121,
+  # closing bracket does not match visual indentation
+  E124,
+  # visually indented line with same indent as next logical line,
+  E129,
+  # whitespace before ':'
+  E203

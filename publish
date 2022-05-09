@@ -12,9 +12,9 @@ _SCRIPT_NAME="$(basename "$0")"
 
 function _usage() {
   local SYNOP_INDENT
-  SYNOP_INDENT="$(head -c "$(echo -n "${_SCRIPT_NAME}" | wc -c)" < /dev/zero | tr '\0' " ")"
+  SYNOP_INDENT="$(head -c "$(echo -n "${_SCRIPT_NAME}" | wc -c)" </dev/zero | tr '\0' " ")"
 
-  cat << EOF
+  cat <<EOF
 NAME
        ${_SCRIPT_NAME}
 
@@ -88,11 +88,11 @@ done
 
 ################################################################# COMMON COPY ####################################################################
 function repeat_char() {
-  head -c "$2" < /dev/zero | tr '\0' "$1"
+  head -c "$2" </dev/zero | tr '\0' "$1"
 }
 function get_sep_cols() {
   local sep_cols=160 term_cols
-  if command -v 'get_terminal_columns' > /dev/null 2>&1; then
+  if command -v 'get_terminal_columns' >/dev/null 2>&1; then
     term_cols="$(get_terminal_columns)"
     if test -n "$term_cols"; then
       sep_cols="$term_cols"
@@ -103,23 +103,19 @@ function get_sep_cols() {
   fi
   echo -n "$sep_cols"
 }
-function get_terminal_sep() {
-  if [ -z "${TERMINAL_SEP:-}" ]; then
+function log_sep() {
+  if test -z "${TERMINAL_SEP:-}"; then
     local rep_count
     rep_count=$(get_sep_cols 2)
     TERMINAL_SEP="$(repeat_char '-' "$rep_count")"
     export TERMINAL_SEP
   fi
-  return 0
-}
-function echo_sep() {
-  get_terminal_sep
   echo "$TERMINAL_SEP"
 }
-function echo_with_sep() {
-  echo_sep
+function log_with_sep_around() {
+  log_sep
   echo "$@"
-  echo_sep
+  log_sep
 }
 function check_debug() {
   check_true "${debug_mode:-}"
@@ -188,7 +184,10 @@ function continue_because_debug() {
 
 function check_git_default_branch() {
   if git is-side-branch; then
-    echo "Git repo not on master branch! Make a PR to master first"
+    if check_next_only; then
+      return 0
+    fi
+    echo "Git repo not on the default branch (eg master, main)! Make a PR to the default branch first"
     if continue_because_debug; then
       return 0
     fi
@@ -353,14 +352,14 @@ function display_info_and_confirm() {
     NEXT_VERS "$NEXT_VERS"
   )
 
-  echo_sep
+  log_sep
 
   while test "${#display_infos[@]}" -gt 0; do
     printf "%-50s -> %s\n" "${display_infos[0]}" "${display_infos[1]}"
     display_infos=("${display_infos[@]:2}")
   done
 
-  echo_sep
+  log_sep
 
   if ! confirm_with_auto "Continue with publish?"; then
     exiting 1
@@ -493,7 +492,7 @@ function __custom_next_version_bump() {
   if check_debug; then
     echo echo -n "${NEXT_VERS}" '>' "$VERSION_FILE"
   else
-    echo -n "${NEXT_VERS}" > "$VERSION_FILE"
+    echo -n "${NEXT_VERS}" >"$VERSION_FILE"
   fi
 }
 ##################################################################################################################################################

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 ################################################################### SETUP ########################################################################
-S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done
-_SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
+S="${BASH_SOURCE[0]}" && while [ -h "$S" ]; do D="$(cd -P "$(dirname "$S")" && pwd)" && S="$(readlink "$S")" && [[ $S != /* ]] && S="$D/$S"; done || true && _SCRIPT_DIR="$(cd -P "$(dirname "$S")" && pwd)" && unset S D
 ##################################################################################################################################################
 
 ##################################################################################################################################################
@@ -16,7 +15,7 @@ BASH_HIST_ADD_TO_DB="${BASH_HIST_ADD_TO_DB:-false}"
 BASH_HIST_IGNORE_MISSING_DB="${BASH_HIST_IGNORE_MISSING_DB:-false}"
 BASH_HIST_SELECT_LIMIT="${BASH_HIST_SELECT_LIMIT:-50}"
 
-unalias hg hgc hge hgp hgu > /dev/null 2>&1 || true
+unalias hg hgc hge hgp hgu >/dev/null 2>&1 || true
 
 ##################################################################################################################################################
 ################################################################# VANILLA BASH ###################################################################
@@ -30,7 +29,7 @@ _BH_FUNCS=(
   hist_grep_pwd
   hist_grep_unique
 )
-unset -f "${_BH_FUNCS[@]}" > /dev/null 2>&1 || true
+unset -f "${_BH_FUNCS[@]}" >/dev/null 2>&1 || true
 # shellcheck source=.dotfiles/.bash_history_vanilla_bash.sh
 source "${_SCRIPT_DIR}/.bash_history_vanilla_bash.sh"
 
@@ -38,10 +37,10 @@ source "${_SCRIPT_DIR}/.bash_history_vanilla_bash.sh"
 ############################################################### CHECK FOR SQLITE #################################################################
 ##################################################################################################################################################
 function _bh_has_python() {
-  if command -v python3 > /dev/null 2>&1 && [[ "$(python3 -V)" == 'Python 3'* ]]; then
+  if command -v python3 >/dev/null 2>&1 && [[ "$(python3 -V)" == 'Python 3'* ]]; then
     return 0
   fi
-  if command -v python > /dev/null 2>&1 && [[ "$(python -V)" == 'Python 3'* ]]; then
+  if command -v python >/dev/null 2>&1 && [[ "$(python -V)" == 'Python 3'* ]]; then
     return 0
   fi
   return 1
@@ -52,7 +51,7 @@ function _bh_using_sqlite() {
 }
 
 _BASH_HIST_USING_SQLITE=true
-if test "${BASH_HIST_NO_SQLITE}" = "true" || ! command -v hist_db_insert > /dev/null 2>&1 || ! command -v hist_grep > /dev/null 2>&1 || ! _bh_has_python; then
+if test "${BASH_HIST_NO_SQLITE}" = "true" || ! command -v hist_db_insert >/dev/null 2>&1 || ! command -v hist_grep >/dev/null 2>&1 || ! _bh_has_python; then
   _BASH_HIST_USING_SQLITE=false
 fi
 

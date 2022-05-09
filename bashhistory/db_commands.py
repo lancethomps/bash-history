@@ -87,7 +87,7 @@ def insert_command(
     close_after = True
     db_conn = db_connection.connect()
 
-  db_conn.execute(SQL.INSERT_COMMAND, [
+  db_conn.cursor().execute(SQL.INSERT_COMMAND, [
     command,
     at.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],
     host,
@@ -96,7 +96,7 @@ def insert_command(
     exit_code,
     pid,
     sequence,
-  ])
+  ]).close()
 
   if close_after:
     db_connection.close(db_conn, commit=True)

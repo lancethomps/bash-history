@@ -13,7 +13,7 @@ def connect(
   if create_if_missing and not os.path.exists(db_file):
     db_commands.create_db()
 
-  db_conn = sqlite3.connect(db_file)
+  db_conn = sqlite3.connect(db_file, timeout=5.0)
 
   if load_regexp:
     load_regexp_function(db_conn)
@@ -22,7 +22,8 @@ def connect(
 
 
 def close(db_conn: sqlite3.Connection, commit: bool = True):
-  db_conn.commit()
+  if commit:
+    db_conn.commit()
   db_conn.close()
 
 

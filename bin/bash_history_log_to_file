@@ -64,7 +64,7 @@ if [[ ${command_part} == " "* ]]; then
 fi
 
 function get_at() {
-  python -c "from datetime import datetime;import sys;sys.stdout.write(datetime.utcnow().strftime(\"%Y-%m-%d %H:%M:%S.%f\")[:-3]);"
+  python -c 'from datetime import datetime;import sys;sys.stdout.write(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]);'
 }
 function get_pwd_prefix() {
   if test "$(id -u)" -eq 0; then
@@ -75,10 +75,10 @@ function get_pwd_prefix() {
 }
 
 tab_char=$'\t'
-echo "$(get_at)${tab_char}$(get_pwd_prefix)$(pwd)${tab_char} ${command_part}" >> "${BASH_HIST_LOGS}/bash-history_$(date "+%Y-%m-%d")_$(hostname).log"
+echo "$(get_at)${tab_char}$(get_pwd_prefix)$(pwd)${tab_char} ${command_part}" >>"${BASH_HIST_LOGS}/bash-history_$(date "+%Y-%m-%d")_$(hostname).log"
 
 if test "${add_to_db-}" = "true"; then
-  if ! command -v hist_db_insert > /dev/null 2>&1; then
+  if ! command -v hist_db_insert >/dev/null 2>&1; then
     if test "${ignore_missing_db-}" = "true"; then
       exit 0
     fi

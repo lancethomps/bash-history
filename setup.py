@@ -92,6 +92,7 @@ setup(
   python_requires='>=3.6',
   packages=['bashhistory', 'bashhistorytests'],
   install_requires=requirements,
+  extras_require={'pcre': ['python-pcre']},
   classifiers=[
     'Intended Audience :: Developers',
     'Environment :: Console',

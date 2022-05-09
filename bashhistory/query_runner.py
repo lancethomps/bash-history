@@ -64,14 +64,14 @@ def query_via_command_line(config: BashHistoryConfig, args: SelectScriptArgs, qu
   logging.debug("SQL QUERY (sqlite3 CLI)\n%s", parsed_sql)
   args.check_for_debug_and_exit()
 
-  command_result = procs.run([
+  sqlite_cmd = [
     "sqlite3",
     "-cmd",
     ".load %s" % config.sqlite_regexp_loader,
     db_connection.get_db_file(),
     parsed_sql,
-  ], check=True)
-
+  ]
+  command_result = procs.run(sqlite_cmd, check=True)
   for line in command_result.stdout.splitlines():
     results.append(json.loads(line))
 

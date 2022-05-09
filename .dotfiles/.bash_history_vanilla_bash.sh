@@ -37,7 +37,7 @@ function _bh_vanilla_hist() {
   fi
 
   local sort_reverse_cmd
-  if command -v tac > /dev/null 2>&1; then
+  if command -v tac >/dev/null 2>&1; then
     sort_reverse_cmd='tac'
   else
     sort_reverse_cmd='tail -r'
@@ -57,7 +57,7 @@ function _bh_vanilla_hist() {
   local out add_out all_logs
   all_logs="$(ls -t "$BASH_HIST_LOGS/bash-history"*.log)"
   while ((size > curr_size)); do
-    add_out="$(tail < "$(echo "$all_logs" | head "-$file_pos" | tail -1)" "-$remaining_size" | $sort_reverse_cmd)"
+    add_out="$(tail <"$(echo "$all_logs" | head "-$file_pos" | tail -1)" "-$remaining_size" | $sort_reverse_cmd)"
     add_size="$(echo "$add_out" | wc -l | tr -d '\011\012\015')"
     file_pos="$((file_pos + 1))"
     curr_size="$((curr_size + add_size))"
@@ -94,7 +94,7 @@ function _bh_vanilla_hist_grep() {
   if test "${1-}" = '--use-case'; then
     shift
     grep_args=("$@")
-  elif ! [[ "${*: -1}" =~ [A-Z] ]]; then
+  elif ! [[ ${*: -1} =~ [A-Z] ]]; then
     grep_args+=("-i")
   fi
 

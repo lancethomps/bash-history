@@ -28,7 +28,7 @@ def create_results_output(config: BashHistoryConfig, args: SelectScriptArgs, res
     col_length = column_max_lengths.get(column)
 
     if not args.no_color and column in config.column_colors:
-      col_length += 9
+      col_length += len(config.column_colors.get(column) + TermColors.ENDC)
 
     format_str_parts.append("{:" + str(col_length) + "}")
 
@@ -54,6 +54,7 @@ def ask_user_to_select_command(results: List[dict], output_lines: List[str]) -> 
     layout="reverse",
     multi=True,
     ansi=True,
+    include_select_all_bind=True,
   ).splitlines(keepends=False)
 
   for selection in selections:

@@ -31,6 +31,7 @@ class BashHistoryConfig(object):
     self.columns = defaults.get("columns", "at,command")
     self.limit = int(defaults.get("limit", os.getenv("BASH_HIST_SELECT_LIMIT", "50")))
     self.limit_order = defaults.get("limit_order", "at DESC")
+    self.other_home_paths: List[Path] = [Path(val) for val in defaults.get("other_home_paths").split(",")] if "other_home_paths" in defaults else None
     self.pager = defaults.get("pager") if "pager" in defaults else os.getenv("BASH_HIST_PAGER", os.getenv("PAGER"))
     self.sqlite_regexp_loader = defaults.get("sqlite_regexp_loader")
 
@@ -87,17 +88,25 @@ class BashHistorySelectArgs(object):
   DEFAULT_REQUIRE_PATTERN: bool = False
 
   def __init__(self, args: argparse.Namespace):
+    self.add_columns: List[str] = args.add_columns.split(",") if args.add_columns else None
     self.columns: List[str] = args.columns.split(",")
+    if self.add_columns:
+      self.columns.extend(self.add_columns)
     self.limit: int = args.limit
     self.limit_order = args.limit_order
     self.unique: bool = args.unique
 
+    self.at: List[str] = args.at if args.at else []
+    self.at_datetime: List[str] = args.at_datetime if args.at_datetime else []
+    self.at_from: str = args.at_from
+    self.at_to: str = args.at_to
     self.dir: List[str] = args.dir if args.dir else []
     self.dir_regex: str = args.dir_regex
     self.exit_code: List[int] = args.exit_code if args.exit_code else []
     self.host: List[str] = args.host if args.host else []
     self.host_regex: str = args.host_regex
     self.user: List[str] = args.user if args.user else []
+    self.raw_sql_filter: List[str] = args.raw_sql_filter if args.raw_sql_filter else []
 
     self.me: bool = args.me
     self.pwd: bool = args.pwd
@@ -127,21 +136,27 @@ class BashHistorySelectArgs(object):
     with_pattern: bool = True,
     require_pattern: bool = DEFAULT_REQUIRE_PATTERN,
   ) -> argparse.ArgumentParser:
+    arg_parser.add_argument("--add-columns", "-ac")
     arg_parser.add_argument("--columns", "-c", default=config.columns)
     arg_parser.add_argument("--limit", "-l", type=int, default=config.limit)
     arg_parser.add_argument("--limit-order", default=config.limit_order)
-    arg_parser.add_argument("--unique", "-u", action="store_true")
+    arg_parser.add_argument("--unique", "-u", action=argparse.BooleanOptionalAction)
 
+    arg_parser.add_argument("--at", "-a", action="append")
+    arg_parser.add_argument("--at-datetime", action="append")
+    arg_parser.add_argument("--at-from", "-af")
+    arg_parser.add_argument("--at-to", "-at")
     arg_parser.add_argument("--dir", "-d", action="append")
     arg_parser.add_argument("--dir-regex", "-dr")
     arg_parser.add_argument("--exit-code", action="append", type=int)
     arg_parser.add_argument("--host", action="append")
     arg_parser.add_argument("--host-regex", "-hr")
     arg_parser.add_argument("--user", action="append")
+    arg_parser.add_argument("--raw-sql-filter", "--raw", action="append")
 
     arg_parser.add_argument("--me", action="store_true")
     arg_parser.add_argument("--pwd", "-p", action="store_true")
-    arg_parser.add_argument("--return-self", action="store_true")
+    arg_parser.add_argument("--return-self", action=argparse.BooleanOptionalAction)
     arg_parser.add_argument("--root", action="store_true")
 
     if with_pattern:

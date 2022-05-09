@@ -67,12 +67,20 @@ def query_builder(args: SelectScriptArgs, use_command_line: bool = False) -> Tup
 
   filters = ["1"]
 
+  add_filter_if_valid(filters, params, "DATE(at)", args.at)
+  add_filter_if_valid(filters, params, "DATETIME(at)", args.at_datetime)
+  add_filter_if_valid(filters, params, "at", args.at_from, sql_operator=">=")
+  add_filter_if_valid(filters, params, "at", args.at_to, sql_operator="<=")
   add_filter_if_valid(filters, params, "exit_code", args.exit_code)
-  add_filter_if_valid(filters, params, "host", args.host, "LIKE")
+  add_filter_if_valid(filters, params, "host", args.host, sql_operator="LIKE")
   add_filter_if_valid(filters, params, "host", args.host_regex, sql_operator=OP_REGEXP)
   add_filter_if_valid(filters, params, "pwd", args.dir)
   add_filter_if_valid(filters, params, "pwd", args.dir_regex, sql_operator=OP_REGEXP)
   add_filter_if_valid(filters, params, "user", args.user)
+
+  if args.raw_sql_filter:
+    filters.extend(args.raw_sql_filter)
+
   if not args.return_self:
     add_filter_if_valid(filters, params, "command", "^(%s)($| )" % "|".join(SELF_COMMANDS), sql_operator=("NOT " + OP_REGEXP))
 

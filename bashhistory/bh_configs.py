@@ -96,12 +96,17 @@ class BashHistorySelectArgs(object):
     self.limit_order = args.limit_order
     self.unique: bool = args.unique
 
+    self.at: List[str] = args.at if args.at else []
+    self.at_datetime: List[str] = args.at_datetime if args.at_datetime else []
+    self.at_from: str = args.at_from
+    self.at_to: str = args.at_to
     self.dir: List[str] = args.dir if args.dir else []
     self.dir_regex: str = args.dir_regex
     self.exit_code: List[int] = args.exit_code if args.exit_code else []
     self.host: List[str] = args.host if args.host else []
     self.host_regex: str = args.host_regex
     self.user: List[str] = args.user if args.user else []
+    self.raw_sql_filter: List[str] = args.raw_sql_filter if args.raw_sql_filter else []
 
     self.me: bool = args.me
     self.pwd: bool = args.pwd
@@ -137,12 +142,17 @@ class BashHistorySelectArgs(object):
     arg_parser.add_argument("--limit-order", default=config.limit_order)
     arg_parser.add_argument("--unique", "-u", action=argparse.BooleanOptionalAction)
 
+    arg_parser.add_argument("--at", "-a", action="append")
+    arg_parser.add_argument("--at-datetime", action="append")
+    arg_parser.add_argument("--at-from", "-af")
+    arg_parser.add_argument("--at-to", "-at")
     arg_parser.add_argument("--dir", "-d", action="append")
     arg_parser.add_argument("--dir-regex", "-dr")
     arg_parser.add_argument("--exit-code", action="append", type=int)
     arg_parser.add_argument("--host", action="append")
     arg_parser.add_argument("--host-regex", "-hr")
     arg_parser.add_argument("--user", action="append")
+    arg_parser.add_argument("--raw-sql-filter", "--raw", action="append")
 
     arg_parser.add_argument("--me", action="store_true")
     arg_parser.add_argument("--pwd", "-p", action="store_true")

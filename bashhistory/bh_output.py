@@ -28,7 +28,7 @@ def create_results_output(config: BashHistoryConfig, args: SelectScriptArgs, res
     col_length = column_max_lengths.get(column)
 
     if not args.no_color and column in config.column_colors:
-      col_length += 9
+      col_length += len(config.column_colors.get(column) + TermColors.ENDC)
 
     format_str_parts.append("{:" + str(col_length) + "}")
 
@@ -49,7 +49,7 @@ def ask_user_to_select_command(results: List[dict], output_lines: List[str]) -> 
   index_line_format_str = "%" + str(index_max_chars) + "s: %s"
   selections = select_prompt(
     [(index_line_format_str % (index, line)) for index, line in enumerate(output_lines[1:], start=1)],
-    header="Please select the command from the list below.\n    " + (" " * index_max_chars) + output_lines[0],
+    header="Please select the command from the list below.\n  " + (" " * index_max_chars) + output_lines[0],
     no_sort=True,
     layout="reverse",
     multi=True,

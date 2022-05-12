@@ -5,7 +5,7 @@ init::
 debug::
 	pipenv graph
 
-format-python::
+lint-fix-python::
 	pipenv run yapf --in-place --parallel --recursive --verbose $(PY_PATHS) setup.py
 
 coverage::
@@ -19,6 +19,8 @@ lint-python-style::
 	pipenv run yapf --diff --recursive $(PY_PATHS) setup.py
 
 lint:: lint-flake8 lint-python-style
+
+lint-fix:: lint-fix-python
 
 test::
 	pipenv run pytest --cov=$(PY_PACKAGE)

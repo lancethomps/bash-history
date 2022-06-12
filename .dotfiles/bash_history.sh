@@ -46,6 +46,16 @@ function _bh_has_python() {
   return 1
 }
 
+function _bh_python_version_env_vars() {
+  if command -v asdf >/dev/null 2>&1 && [[ "$(which python)" == "${ASDF_DATA_DIR:-${HOME}/.asdf}/"* ]]; then
+    echo "ASDF_PYTHON_VERSION=$(python --version | sed 's/Python //g') "
+  elif command -v pyenv >/dev/null 2>&1 && [[ "$(which python)" == "$(pyenv root)/"* ]]; then
+    echo "PYENV_VERSION=$(python --version | sed 's/Python //g') "
+  fi
+
+  return 0
+}
+
 function _bh_using_sqlite() {
   test "${_BASH_HIST_USING_SQLITE}" = "true"
 }
@@ -69,12 +79,12 @@ if test "${BASH_HIST_NO_WRITE:-}" = 'true'; then
 elif test -w "$HOME"; then
   if _bh_using_sqlite && test "${BASH_HIST_ADD_TO_DB}" != "true"; then
     # shellcheck disable=SC2016
-    log_cmd='hist_db_insert --exit-code "$?" --pid "$$" --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)"'
+    log_cmd="$(_bh_python_version_env_vars)"'hist_db_insert --exit-code "$?" --pid "$$" --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)"'
   else
     # shellcheck disable=SC2016
     log_cmd='bash_history_log_to_file --exit-code $? --pid $$ --command "$(HISTTIMEFORMAT= history 1 2>/dev/null)"'
     if test "${BASH_HIST_ADD_TO_DB}" = "true"; then
-      log_cmd="${log_cmd} --add-to-db"
+      log_cmd="$(_bh_python_version_env_vars)${log_cmd} --add-to-db"
     fi
     if test "${BASH_HIST_IGNORE_MISSING_DB}" = "true"; then
       log_cmd="${log_cmd} --ignore-missing-db"
@@ -133,4 +143,5 @@ unset -v \
 
 unset -f \
   _bh_has_python \
+  _bh_python_version_env_vars \
   _bh_using_sqlite

@@ -77,7 +77,10 @@ def insert_command(
     host = os.uname()[1]
 
   if not pwd:
-    pwd = os.getcwd()
+    try:
+      pwd = os.getcwd()
+    except:  # noqa: E722
+      pwd = "UNKNOWN"
 
   if not user:
     user = getuser()

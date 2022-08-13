@@ -48,7 +48,9 @@ function _bh_has_python() {
 
 function _bh_python_version_env_vars() {
   if command -v asdf >/dev/null 2>&1 && [[ "$(which python)" == "${ASDF_DATA_DIR:-${HOME}/.asdf}/"* ]]; then
-    echo "ASDF_PYTHON_VERSION=$(python --version | sed 's/Python //g') "
+    local asdf_py_vers
+    asdf_py_vers="$(python --version | sed 's/Python //g')"
+    echo "ASDF_PYTHON_VERSION=${asdf_py_vers} ~/.asdf/installs/python/${asdf_py_vers}/bin/"
   elif command -v pyenv >/dev/null 2>&1 && [[ "$(which python)" == "$(pyenv root)/"* ]]; then
     echo "PYENV_VERSION=$(python --version | sed 's/Python //g') "
   fi

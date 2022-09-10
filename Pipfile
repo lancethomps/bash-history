@@ -12,6 +12,7 @@ pytest-cov = "*"
 pytest-mock = "*"
 pytest-xdist = "*"
 readme-renderer = "*"
+toml = "*"
 tox = "*"
 yapf = "*"
 

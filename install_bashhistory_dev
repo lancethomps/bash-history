@@ -6,16 +6,6 @@ set -o errexit -o errtrace -o nounset
 shopt -s expand_aliases
 ##################################################################################################################################################
 
-if test "$(uname)" = "Darwin"; then
-  if command -v gsed >/dev/null 2>&1; then
-    alias sed_ext_in_place='gsed -i -r'
-  else
-    alias sed_ext_in_place='/usr/bin/sed -i "" -E'
-  fi
-else
-  alias sed_ext_in_place='sed -r -i'
-fi
-
 function install_pip() {
   pip uninstall --yes bashhistory || true
   pip install --editable "$_SCRIPT_DIR"
@@ -31,9 +21,13 @@ function fix_pyenv_console_script_shims() {
     return 0
   fi
 
+  if ! command -v gsed >/dev/null 2>&1; then
+    brew install gsed
+  fi
+
   echo "Modifying console_script bin file to use a direct import: ${console_script} at $script_bin_file"
-  sed_ext_in_place 's/from pkg_resources import load_entry_point/from bashhistory.cli import '"$console_script"'/g' "$script_bin_file"
-  sed_ext_in_place 's/load_entry_point.*/'"$console_script"'()/g' "$script_bin_file"
+  gsed -i -r 's/from pkg_resources import load_entry_point/from bashhistory.cli import '"$console_script"'/g' "$script_bin_file"
+  gsed -i -r 's/load_entry_point.*/'"$console_script"'()/g' "$script_bin_file"
 }
 
 install_pip

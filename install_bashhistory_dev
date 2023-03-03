@@ -11,6 +11,7 @@ function install_pip() {
   pip install --editable "$_SCRIPT_DIR"
 }
 
+# shellcheck disable=SC2317
 function fix_pyenv_console_script_shims() {
   local console_script script_bin_file
   console_script="$1"

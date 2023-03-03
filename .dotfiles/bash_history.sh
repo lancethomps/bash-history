@@ -70,13 +70,13 @@ fi
 ##################################################################################################################################################
 ################################################################# PROMPT SETUP ###################################################################
 ##################################################################################################################################################
-if test -z "${ORIG_PROMPT_COMMAND:-}"; then
+if test -z "${ORIG_PROMPT_COMMAND-}"; then
   export ORIG_PROMPT_COMMAND="${PROMPT_COMMAND:- }"
 else
   export PROMPT_COMMAND="$ORIG_PROMPT_COMMAND"
 fi
 
-if test "${BASH_HIST_NO_WRITE:-}" = 'true'; then
+if test "${BASH_HIST_NO_WRITE-}" = 'true'; then
   true
 elif test -w "$HOME"; then
   if _bh_using_sqlite && test "${BASH_HIST_ADD_TO_DB}" != "true"; then

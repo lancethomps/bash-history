@@ -37,7 +37,7 @@ source "${_SCRIPT_DIR}/.bash_history_vanilla_bash.sh"
 ############################################################### CHECK FOR SQLITE #################################################################
 ##################################################################################################################################################
 function _bh_has_python() {
-  if command -v python3 >/dev/null 2>&1 && [[ "$(python3 -V)" == 'Python 3'* ]]; then
+  if command -v python3 >/dev/null 2>&1; then
     return 0
   fi
   if command -v python >/dev/null 2>&1 && [[ "$(python -V)" == 'Python 3'* ]]; then
@@ -49,7 +49,9 @@ function _bh_has_python() {
 function _bh_python_version_env_vars() {
   if command -v asdf >/dev/null 2>&1 && [[ "$(which python)" == "${ASDF_DATA_DIR:-${HOME}/.asdf}/"* ]]; then
     local asdf_py_vers
-    asdf_py_vers="$(python --version | sed 's/Python //g')"
+    if ! asdf_py_vers="$(pcregrep -o1 '^python ([^ ]+)' ~/.tool-versions)"; then
+      asdf_py_vers="$(python --version | sed 's/Python //g')"
+    fi
     echo "ASDF_PYTHON_VERSION=${asdf_py_vers} ~/.asdf/installs/python/${asdf_py_vers}/bin/"
   elif command -v pyenv >/dev/null 2>&1 && [[ "$(which python)" == "$(pyenv root)/"* ]]; then
     echo "PYENV_VERSION=$(python --version | sed 's/Python //g') "

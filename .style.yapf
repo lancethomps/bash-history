@@ -121,7 +121,18 @@ dedent_closing_brackets=True
 
 # Disable the heuristic which places each list element on a separate line
 # if the list is comma-terminated.
+#
+# Note: The behavior of this flag changed in v0.40.3.  Before, if this flag
+# was true, we would split lists that contained a trailing comma or a
+# comment.  Now, we have a separate flag, `DISABLE_SPLIT_LIT_WITH_COMMENT`,
+# that controls splitting when a list contains a comment.  To get the old
+# behavior, set both flags to true.  More information in CHANGELOG.md.
 disable_ending_comma_heuristic=False
+
+#
+# Don't put every element on a new line within a list that contains
+# interstitial comments.
+disable_split_list_with_comment=False
 
 # Place each dictionary entry onto its own line.
 each_dict_entry_on_separate_line=True

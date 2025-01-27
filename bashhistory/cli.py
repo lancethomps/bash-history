@@ -6,8 +6,6 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-from bashhistory.bh_configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistorySelectArgs, get_or_load_config, InsertScriptArgs, SelectScriptArgs
-from bashhistory.bh_utils import try_import_argcomplete
 from ltpylib.logs import log_with_title_sep
 from ltpylib.opts import (
   create_default_arg_parser,
@@ -16,6 +14,9 @@ from ltpylib.opts import (
   parse_args_and_init_others,
   RegexCasingArgs,
 )
+
+from bashhistory.bh_configs import BashHistoryBaseArgs, BashHistoryColorArgs, BashHistoryConfig, BashHistorySelectArgs, get_or_load_config, InsertScriptArgs, SelectScriptArgs
+from bashhistory.bh_utils import try_import_argcomplete
 
 
 def hist():
@@ -89,7 +90,7 @@ def hist_grep_exec():
     selected_commands = _query_db_and_select_commands()
     exit_code = 0
     for command in selected_commands:
-      logging.warning("Running: %s\n%s", command, logs.LOG_SEP)
+      logs.log_with_title_sep(f"RUNNING BELOW COMMAND\n{command}", None, level=logging.WARNING)
       result = procs.run_with_regular_stdout(
         ["bash", "-c", command],
         check=False,
